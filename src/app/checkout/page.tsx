@@ -99,7 +99,7 @@ export default function CheckoutPage() {
                   type={field.type}
                   name={field.name}
                   required={field.required}
-                  value={(address as Record<string, string>)[field.name]}
+                  value={(address as unknown as Record<string, string>)[field.name]}
                   onChange={handleChange}
                   className="w-full border border-cream-warm bg-white px-4 py-3
                              text-sm text-green-deep font-light
