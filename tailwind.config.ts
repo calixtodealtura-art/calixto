@@ -9,26 +9,40 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ── Paleta oficial Calixto ──────────────────────────
         green: {
-          deep:   '#1a2e1a',
-          mid:    '#2d4a2d',
-          olive:  '#4a6741',
-          sage:   '#7a9b6e',
+          deep:  '#18532c',   // Color principal
+          mid:   '#1a4a28',   // Variante oscura
+          olive: '#2d6b42',   // Variante media
+          sage:  '#5a9470',   // Variante clara
+        },
+        orange: {
+          DEFAULT: '#ed832b', // Color secundario cálido
+          dark:    '#c96a1a', // Variante oscura
+          light:   '#f5a85c', // Variante clara
+        },
+        red: {
+          brand:   '#8f2412', // Color secundario intenso
+          light:   '#b84030', // Variante clara
         },
         cream: {
-          DEFAULT: '#f5f0e8',
-          warm:    '#ede5d4',
+          DEFAULT: '#fff0dc', // Color secundario neutro
+          warm:    '#f5e4c8', // Variante más oscura
         },
+        gray: {
+          stone:   '#b2bcc2', // Neutro del manual
+        },
+        terra:   '#8f2412',   // Alias para compatibilidad
         gold: {
-          DEFAULT: '#c9a84c',
-          light:   '#e8d08a',
+          DEFAULT: '#ed832b', // Remapeado al naranja de la marca
+          light:   '#f5a85c',
         },
-        terra: '#8b5e3c',
         ivory: '#fdfaf5',
       },
       fontFamily: {
-        serif:  ['var(--font-cormorant)', 'Georgia', 'serif'],
-        sans:   ['var(--font-jost)', 'system-ui', 'sans-serif'],
+        // Lora es la tipografía corporativa oficial de Calixto
+        serif: ['var(--font-lora)', 'Georgia', 'serif'],
+        sans:  ['var(--font-jost)', 'system-ui', 'sans-serif'],
       },
       animation: {
         'float':     'float 4s ease-in-out infinite',

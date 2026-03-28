@@ -91,4 +91,9 @@ export interface Order {
   total:           number
   status:          OrderStatus
   createdAt:       Date
+    paymentId?:     string
+  paymentStatus?: string
+  paymentMethod?: string
+  paidAt?:        Date | null
+  updatedAt?:     Date
 }
