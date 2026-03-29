@@ -6,7 +6,7 @@ import { useCartStore }            from '@/store/cartStore'
 import { useAuthStore }            from '@/store/authStore'
 import { formatPrice, remainingForFreeShipping } from '@/lib/utils'
 import toast                       from 'react-hot-toast'
-import type { ShippingAddress }    from '@/types'
+import type { ShippingAddress, CartItem } from '@/types'
 
 initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY!, {
   locale: 'es-AR',
@@ -35,6 +35,10 @@ export default function CheckoutPage() {
   const [loading,      setLoading]      = useState(false)
   const [step,         setStep]         = useState<'form' | 'payment'>('form')
 
+  // ── Snapshot del pedido (se guarda antes de limpiar el carrito) ──
+  const [orderItems, setOrderItems] = useState<CartItem[]>([])
+  const [orderTotal, setOrderTotal] = useState(0)
+
   const cartTotal = total()
   const shipping  = remainingForFreeShipping(cartTotal) === 0 ? 0 : 1500
 
@@ -44,10 +48,9 @@ export default function CheckoutPage() {
 
   async function handleConfirm(e: React.FormEvent) {
     e.preventDefault()
-
     setLoading(true)
+
     try {
-      // Todo en el servidor: crea la orden en Firestore + preferencia en MP
       const res = await fetch('/api/crear-preferencia', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,6 +66,10 @@ export default function CheckoutPage() {
 
       const { preferenceId: prefId } = await res.json()
 
+      // Guardá snapshot ANTES de limpiar el carrito
+      setOrderItems([...items])
+      setOrderTotal(cartTotal + shipping)
+
       setPreferenceId(prefId)
       setStep('payment')
       clearCart()
@@ -74,6 +81,10 @@ export default function CheckoutPage() {
       setLoading(false)
     }
   }
+
+  // Items a mostrar: snapshot si ya pagamos, carrito si todavía no
+  const displayItems = step === 'payment' ? orderItems : items
+  const displayTotal = step === 'payment' ? orderTotal : cartTotal + shipping
 
   if (items.length === 0 && step === 'form') {
     return (
@@ -100,7 +111,7 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16 items-start">
 
-          {/* Formulario / Botón MP */}
+          {/* ── Formulario / Botón MP ── */}
           <div>
             {step === 'form' ? (
               <form onSubmit={handleConfirm} className="space-y-5">
@@ -118,7 +129,7 @@ export default function CheckoutPage() {
                       onChange={handleChange}
                       className="w-full border border-cream-warm bg-white px-4 py-3
                                  text-sm text-green-deep font-light
-                                 focus:outline-none focus:border-gold transition-colors"
+                                 focus:outline-none focus:border-orange transition-colors"
                     />
                   </div>
                 ))}
@@ -135,7 +146,8 @@ export default function CheckoutPage() {
             ) : (
               <div>
                 <p className="text-sm text-gray-500 font-light mb-6 leading-relaxed">
-                  Tu orden fue registrada. Hacé click en el botón para completar el pago con Mercado Pago.
+                  Tu orden fue registrada. Hacé click en el botón para completar
+                  el pago con Mercado Pago.
                 </p>
 
                 {preferenceId && (
@@ -152,7 +164,7 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* Resumen */}
+          {/* ── Resumen ── */}
           <aside className="bg-cream p-8 sticky top-24">
             <h2 className="font-serif text-xl font-light text-green-deep mb-6
                            pb-4 border-b border-cream-warm">
@@ -160,7 +172,7 @@ export default function CheckoutPage() {
             </h2>
 
             <ul className="space-y-4 mb-6">
-              {items.map(({ product, quantity }) => (
+              {displayItems.map(({ product, quantity }) => (
                 <li key={product.id} className="flex justify-between items-start gap-3">
                   <div>
                     <p className="font-serif text-sm text-green-deep">{product.name}</p>
@@ -176,16 +188,21 @@ export default function CheckoutPage() {
             <div className="border-t border-cream-warm pt-5 space-y-2.5">
               <div className="flex justify-between text-[12px] text-gray-400 font-light">
                 <span>Envío</span>
-                <span>{shipping === 0 ? '🎉 Gratis' : formatPrice(shipping)}</span>
+                <span>
+                  {shipping === 0 ? '🎉 Gratis' : formatPrice(shipping)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[11px] tracking-[0.1em] uppercase text-green-olive">Total</span>
+                <span className="text-[11px] tracking-[0.1em] uppercase text-green-olive">
+                  Total
+                </span>
                 <span className="font-serif text-2xl font-semibold text-green-deep">
-                  {formatPrice(cartTotal + shipping)}
+                  {formatPrice(displayTotal)}
                 </span>
               </div>
             </div>
           </aside>
+
         </div>
       </div>
     </div>

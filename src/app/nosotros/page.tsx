@@ -1,0 +1,268 @@
+import LogoPrincipal from '@/components/ui/LogoPrincipal'
+
+export default function NosotrosPage() {
+  return (
+    <div className="bg-ivory">
+
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      <section
+        className="relative min-h-[70vh] flex items-end"
+        style={{ backgroundColor: '#18532c' }}
+      >
+        {/* Texto decorativo de fondo */}
+        <div
+          className="absolute inset-0 flex items-center justify-center
+                     pointer-events-none select-none overflow-hidden"
+        >
+          <span
+            className="font-serif font-bold text-white/[0.04] leading-none"
+            style={{ fontSize: 'clamp(8rem, 20vw, 18rem)' }}
+          >
+            Calixto
+          </span>
+        </div>
+
+        <div className="relative z-10 max-w-screen-xl mx-auto px-8 md:px-20 pb-20 pt-32">
+          <p className="text-[11px] tracking-[0.28em] uppercase text-orange font-light mb-5">
+            Quiénes somos
+          </p>
+          <h1
+            className="font-serif font-light text-cream leading-[1.05] mb-8"
+            style={{ fontSize: 'clamp(3rem, 6vw, 5rem)' }}
+          >
+            Una selección<br />
+            con <em className="italic" style={{ color: '#fff0dc' }}>criterio</em>
+          </h1>
+          <p className="text-cream/60 font-light text-base leading-relaxed max-w-xl">
+            Calixto nace inspirado en la cordillera y en la identidad de la región de Cuyo.
+            Seleccionamos y acercamos productos regionales, poniendo en valor su origen,
+            su calidad y la historia que hay detrás de cada uno.
+          </p>
+        </div>
+      </section>
+
+      {/* ── PROPÓSITO ────────────────────────────────────────────────── */}
+      <section className="max-w-screen-xl mx-auto px-8 md:px-20 py-24
+                          grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        <div>
+          <p className="section-label">Nuestro propósito</p>
+          <h2 className="section-title mb-8">
+            Del productor<br />
+            <em className="italic text-green-olive">a tu mesa</em>
+          </h2>
+          <p className="text-gray-600 font-light leading-[1.85] text-sm mb-6">
+            Poner en valor los productos regionales y a quienes los producen, generando un vínculo
+            directo entre el origen y el consumidor. Calixto busca que cada producto no solo sea
+            consumido, sino también apreciado por su historia, su calidad y su identidad.
+          </p>
+          <p className="text-gray-600 font-light leading-[1.85] text-sm">
+            Detrás de cada producto hay una decisión: priorizar origen, trabajo real y calidad
+            por sobre volumen. Mientras otros estandarizan, Calixto elige lo que conserva
+            carácter, lo que tiene identidad y no se diluye en lo masivo.
+          </p>
+        </div>
+
+        {/* Panel verde con logo */}
+        <div
+          className="flex items-center justify-center aspect-square max-w-sm mx-auto w-full"
+          style={{ backgroundColor: '#18532c' }}
+        >
+          <LogoPrincipal color="#fff0dc" size={220} />
+        </div>
+      </section>
+
+      {/* ── MISIÓN Y VISIÓN ──────────────────────────────────────────── */}
+      <section style={{ backgroundColor: '#fff0dc' }} id="origen">
+        <div className="max-w-screen-xl mx-auto px-8 md:px-20 py-24
+                        grid grid-cols-1 md:grid-cols-2 gap-0">
+
+          {/* Misión */}
+          <div className="md:border-r border-cream-warm px-0 md:pr-20 pb-16 md:pb-0">
+            <div
+              className="inline-block text-[10px] tracking-[0.25em] uppercase font-medium
+                         px-4 py-1.5 mb-8"
+              style={{ backgroundColor: '#18532c', color: '#fff0dc' }}
+            >
+              Misión
+            </div>
+            <h2 className="font-serif text-3xl font-light text-green-deep mb-6 leading-tight">
+              Un puente entre<br />el origen y el<br />
+              <em className="italic text-green-olive">consumidor</em>
+            </h2>
+            <p className="text-gray-600 font-light leading-[1.85] text-sm">
+              Seleccionar y comercializar productos de pequeños y medianos productores de la región
+              de Cuyo, asegurando calidad, eficiencia y coherencia en cada etapa del proceso.
+              Calixto actúa como un puente entre el origen y el consumidor, facilitando el acceso
+              a productos auténticos sin perder su identidad.
+            </p>
+          </div>
+
+          {/* Visión */}
+          <div className="md:pl-20 pt-16 md:pt-0">
+            <div
+              className="inline-block text-[10px] tracking-[0.25em] uppercase font-medium
+                         px-4 py-1.5 mb-8"
+              style={{ backgroundColor: '#8f2412', color: '#fff0dc' }}
+            >
+              Visión
+            </div>
+            <h2 className="font-serif text-3xl font-light text-green-deep mb-6 leading-tight">
+              Referentes en<br />productos regionales<br />
+              <em className="italic text-green-olive">a nivel nacional</em>
+            </h2>
+            <p className="text-gray-600 font-light leading-[1.85] text-sm">
+              Ser una marca referente en productos regionales a nivel nacional, reconocida por
+              su capacidad de conectar la identidad de Cuyo con consumidores que valoran la calidad
+              y el origen. Calixto busca consolidarse como un símbolo de confianza, autenticidad
+              y selección cuidada.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── VALORES ──────────────────────────────────────────────────── */}
+      <section className="max-w-screen-xl mx-auto px-8 md:px-20 py-24">
+        <div className="text-center mb-16">
+          <p className="section-label">Lo que nos guía</p>
+          <h2 className="section-title">
+            Nuestros <em className="italic text-green-olive">valores</em>
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {[
+            {
+              valor:  'Identidad',
+              texto:  'La base de cada selección. Respetamos el origen y la esencia de los productos.',
+              color:  '#18532c',
+            },
+            {
+              valor:  'Calidad',
+              texto:  'Un pilar central. Procesos cuidados y resultados consistentes en cada etapa.',
+              color:  '#ed832b',
+            },
+            {
+              valor:  'Autenticidad',
+              texto:  'Define cada decisión. Priorizamos lo real por sobre lo masivo.',
+              color:  '#8f2412',
+            },
+            {
+              valor:  'Perseverancia',
+              texto:  'Junto al conocimiento, impulsan el crecimiento sostenido de la marca.',
+              color:  '#18532c',
+            },
+            {
+              valor:  'Eficiencia',
+              texto:  'Optimizar cada etapa para garantizar una propuesta sólida y confiable.',
+              color:  '#ed832b',
+            },
+          ].map(({ valor, texto, color }) => (
+            <div key={valor} className="group">
+              <div
+                className="h-1 mb-6 transition-all duration-300 group-hover:h-1.5"
+                style={{ backgroundColor: color }}
+              />
+              <h3
+                className="font-serif text-xl font-normal mb-3"
+                style={{ color }}
+              >
+                {valor}
+              </h3>
+              <p className="text-sm text-gray-500 font-light leading-relaxed">
+                {texto}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── PERSONALIDAD ─────────────────────────────────────────────── */}
+      <section style={{ backgroundColor: '#18532c' }} className="py-24">
+        <div className="max-w-screen-xl mx-auto px-8 md:px-20">
+          <div className="text-center mb-16">
+            <p className="text-[11px] tracking-[0.28em] uppercase text-orange font-light mb-3">
+              Nuestra voz
+            </p>
+            <h2 className="font-serif text-4xl font-light text-cream">
+              Auténtica · Elegante · <em className="italic" style={{ color: '#fff0dc' }}>Cercana</em>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-3xl mx-auto">
+            <div className="border-l-2 border-orange pl-8">
+              <h3 className="font-serif text-xl text-cream mb-4 font-normal">Auténtica</h3>
+              <p className="text-cream/60 font-light text-sm leading-relaxed">
+                Su voz transmite con claridad lo que es: productos reales, con identidad y con historia.
+                La autenticidad está en dejar que el valor del producto hable por sí mismo.
+              </p>
+            </div>
+            <div className="border-l-2 pl-8" style={{ borderColor: '#fff0dc' }}>
+              <h3 className="font-serif text-xl text-cream mb-4 font-normal">Elegante</h3>
+              <p className="text-cream/60 font-light text-sm leading-relaxed">
+                Comunica con sobriedad y precisión. Está en la selección, en el detalle y en la
+                forma en que cada producto se presenta. Palabras con peso, sin redundancias.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── AUDIENCIA ────────────────────────────────────────────────── */}
+      <section className="max-w-screen-xl mx-auto px-8 md:px-20 py-24
+                          grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        {/* Stat visual */}
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            { num: 'Origen',       sub: 'Cuyo, Argentina'     },
+            { num: 'Criterio',     sub: 'En cada selección'   },
+            { num: 'Autenticidad', sub: 'Sin compromisos'      },
+            { num: 'Comunidad',    sub: 'De productores reales'},
+          ].map(({ num, sub }) => (
+            <div
+              key={num}
+              className="p-6 border border-cream-warm"
+            >
+              <p className="font-serif text-lg text-green-deep font-normal mb-1">{num}</p>
+              <p className="text-[11px] tracking-wide text-gray-400 font-light uppercase">{sub}</p>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <p className="section-label">Nuestra audiencia</p>
+          <h2 className="section-title mb-8">
+            Para quienes<br />
+            <em className="italic text-green-olive">eligen con conciencia</em>
+          </h2>
+          <p className="text-gray-600 font-light leading-[1.85] text-sm mb-6">
+            Personas que buscan diferenciar su consumo, conectando con propuestas auténticas
+            y con una historia detrás, priorizando lo real por sobre lo masivo.
+          </p>
+          <p className="text-gray-600 font-light leading-[1.85] text-sm">
+            Consumidores que entienden que detrás de cada producto hay un productor, una región
+            y una forma de hacer las cosas que vale la pena sostener.
+          </p>
+        </div>
+      </section>
+
+      {/* ── CTA FINAL ────────────────────────────────────────────────── */}
+      <section
+        className="py-20 text-center"
+        style={{ backgroundColor: '#8f2412' }}
+      >
+        <p className="text-[11px] tracking-[0.28em] uppercase text-orange font-light mb-4">
+          Explorá nuestra selección
+        </p>
+        <h2 className="font-serif text-4xl font-light text-cream mb-8">
+          Cada producto tiene<br />
+          <em className="italic" style={{ color: '#fff0dc' }}>una historia</em>
+        </h2>
+        <a href="/productos" className="btn-primary inline-block"
+           style={{ background: '#fff0dc', color: '#18532c' }}>
+          Ver productos
+        </a>
+      </section>
+
+    </div>
+  )
+}
