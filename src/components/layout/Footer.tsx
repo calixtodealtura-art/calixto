@@ -12,7 +12,6 @@ const LINKS = {
   'Empresa': [
     { label: 'Nuestra historia', href: '/nosotros'        },
     { label: 'El origen',        href: '/nosotros#origen' },
-    { label: 'Sustentabilidad',  href: '/sustentabilidad' },
     { label: 'Recetas',          href: '/recetas'         },
   ],
   'Ayuda': [

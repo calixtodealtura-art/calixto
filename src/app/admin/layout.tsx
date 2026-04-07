@@ -1,15 +1,16 @@
 'use client'
 
-import Link                from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { signOut }         from 'firebase/auth'
-import { auth }            from '@/lib/firebase'
-import { LayoutDashboard, ShoppingBag, Package, LogOut } from 'lucide-react'
-import { cn }              from '@/lib/utils'
+import Link                        from 'next/link'
+import { usePathname, useRouter }  from 'next/navigation'
+import { signOut }                 from 'firebase/auth'
+import { auth }                    from '@/lib/firebase'
+import { ShoppingBag, Package, BarChart2, LogOut } from 'lucide-react'
+import { cn }                      from '@/lib/utils'
 
 const NAV = [
   { href: '/admin/ordenes',   label: 'Órdenes',   icon: ShoppingBag  },
-  { href: '/admin/productos', label: 'Productos', icon: Package       },
+  { href: '/admin/productos', label: 'Productos', icon: Package      },
+  { href: '/admin/stock',     label: 'Stock',     icon: BarChart2    },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/admin/login')
   }
 
-  // No mostrar sidebar en la página de login
   if (pathname === '/admin/login') return <>{children}</>
 
   return (
@@ -30,21 +30,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside className="w-56 bg-green-deep flex flex-col shrink-0">
-        {/* Logo */}
         <div className="px-6 py-6 border-b border-green-mid">
           <p className="font-serif text-xl font-semibold text-cream tracking-widest">
             CALIXTO
           </p>
-          <p className="text-[9px] tracking-[0.2em] uppercase text-gold mt-0.5 font-light">
+          <p className="text-[9px] tracking-[0.2em] uppercase text-orange mt-0.5 font-light">
             Admin
           </p>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">
           {NAV.map(item => {
-            const Icon    = item.icon
-            const active  = pathname.startsWith(item.href)
+            const Icon   = item.icon
+            const active = pathname.startsWith(item.href)
             return (
               <Link
                 key={item.href}
@@ -52,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 text-[12px] tracking-wide transition-all',
                   active
-                    ? 'bg-green-mid text-gold'
+                    ? 'bg-green-mid text-orange'
                     : 'text-cream/60 hover:text-cream hover:bg-green-mid/50'
                 )}
               >
@@ -63,7 +61,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* Logout */}
         <div className="px-3 py-4 border-t border-green-mid">
           <button
             onClick={handleLogout}
@@ -77,7 +74,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 overflow-auto">
         {children}
       </main>
