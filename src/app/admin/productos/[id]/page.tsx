@@ -6,13 +6,9 @@ import {
   doc, getDoc, addDoc, updateDoc,
   collection, Timestamp,
 }                                      from 'firebase/firestore'
-import {
-  ref, uploadBytesResumable,
-  getDownloadURL, deleteObject,
-}                                      from 'firebase/storage'
-import { db, storage }                 from '@/lib/firebase'
+import { db }                          from '@/lib/firebase'
 import { slugify, formatPrice }        from '@/lib/utils'
-import { Upload, X, ImagePlus }        from 'lucide-react'
+import { X, ImagePlus }                from 'lucide-react'
 import toast                           from 'react-hot-toast'
 import type { Product, ProductCategory } from '@/types'
 
@@ -39,16 +35,16 @@ const EMPTY: Omit<Product, 'id' | 'createdAt'> = {
 }
 
 export default function ProductFormPage() {
-  const router    = useRouter()
-  const params    = useParams()
-  const id        = params.id as string
-  const isNew     = id === 'nuevo'
+  const router   = useRouter()
+  const params   = useParams()
+  const id       = params.id as string
+  const isNew    = id === 'nuevo'
 
-  const [form,     setForm]     = useState(EMPTY)
-  const [loading,  setLoading]  = useState(!isNew)
-  const [saving,   setSaving]   = useState(false)
-  const [uploading,setUploading]= useState(false)
-  const [uploadPct,setUploadPct]= useState(0)
+  const [form,      setForm]      = useState(EMPTY)
+  const [loading,   setLoading]   = useState(!isNew)
+  const [saving,    setSaving]    = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadPct, setUploadPct] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Cargar producto existente
@@ -57,7 +53,11 @@ export default function ProductFormPage() {
     async function load() {
       try {
         const snap = await getDoc(doc(db, 'products', id))
-        if (!snap.exists()) { toast.error('Producto no encontrado'); router.push('/admin/productos'); return }
+        if (!snap.exists()) {
+          toast.error('Producto no encontrado')
+          router.push('/admin/productos')
+          return
+        }
         const data = snap.data() as Product
         setForm({
           name:        data.name        ?? '',
@@ -93,56 +93,90 @@ export default function ProductFormPage() {
 
     setForm(prev => {
       const updated = { ...prev, [name]: val }
-      // Auto-generar slug desde el nombre
       if (name === 'name') updated.slug = slugify(value)
       return updated
     })
   }
 
-  // Subir imagen a Firebase Storage
+  // ── Subida a Cloudinary (sin SDK, fetch directo) ──────────────
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Validar tamaño (5MB máx)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede superar 5MB')
+      return
+    }
+
     setUploading(true)
     setUploadPct(0)
 
-    const storageRef = ref(storage, `products/${Date.now()}-${file.name}`)
-    const uploadTask = uploadBytesResumable(storageRef, file)
+    try {
+      const cloudName   = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
 
-    uploadTask.on(
-      'state_changed',
-      snap => setUploadPct(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-      err  => { console.error(err); toast.error('Error subiendo imagen'); setUploading(false) },
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref)
-        setForm(prev => ({ ...prev, images: [...prev.images, url] }))
-        setUploading(false)
-        toast.success('Imagen subida')
-      }
-    )
+      const formData = new FormData()
+      formData.append('file',         file)
+      formData.append('upload_preset', uploadPreset)
+      formData.append('folder',        'calixto/products')
+
+      // Usamos XMLHttpRequest para tener progreso de subida
+      const url = await new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+
+        xhr.upload.addEventListener('progress', e => {
+          if (e.lengthComputable) {
+            setUploadPct(Math.round((e.loaded / e.total) * 100))
+          }
+        })
+
+        xhr.addEventListener('load', () => {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText)
+            resolve(data.secure_url)
+          } else {
+            reject(new Error('Error al subir imagen'))
+          }
+        })
+
+        xhr.addEventListener('error', () => reject(new Error('Error de red')))
+
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`)
+        xhr.send(formData)
+      })
+
+      setForm(prev => ({ ...prev, images: [...prev.images, url] }))
+      toast.success('Imagen subida')
+
+    } catch (err) {
+      console.error(err)
+      toast.error('No se pudo subir la imagen')
+    } finally {
+      setUploading(false)
+      setUploadPct(0)
+      // Limpiar el input para poder subir la misma imagen de nuevo
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
-  async function handleRemoveImage(url: string) {
-    try {
-      const storageRef = ref(storage, url)
-      await deleteObject(storageRef)
-    } catch {
-      // Si falla al borrar de Storage igual sacamos del form
-    }
+  function handleRemoveImage(url: string) {
+    // Solo sacamos la URL del form (Cloudinary no requiere borrado explícito en el free tier)
     setForm(prev => ({ ...prev, images: prev.images.filter(i => i !== url) }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name || !form.price) { toast.error('Nombre y precio son obligatorios'); return }
+    if (!form.name || !form.price) {
+      toast.error('Nombre y precio son obligatorios')
+      return
+    }
 
     setSaving(true)
     try {
       if (isNew) {
         await addDoc(collection(db, 'products'), {
           ...form,
-          tags:      form.tags,
           createdAt: Timestamp.now(),
         })
         toast.success('Producto creado')
@@ -171,7 +205,6 @@ export default function ProductFormPage() {
 
   return (
     <div className="p-8 max-w-3xl">
-      {/* Header */}
       <div className="mb-8">
         <p className="text-[11px] tracking-[0.2em] uppercase text-green-olive font-light mb-1">
           {isNew ? 'Nuevo producto' : 'Editar producto'}
@@ -183,7 +216,6 @@ export default function ProductFormPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* Nombre + Slug */}
         <div className="grid grid-cols-2 gap-4">
           <Field label="Nombre *">
             <input name="name" required value={form.name}
@@ -195,7 +227,6 @@ export default function ProductFormPage() {
           </Field>
         </div>
 
-        {/* Categoría + Badge */}
         <div className="grid grid-cols-2 gap-4">
           <Field label="Categoría *">
             <select name="category" value={form.category}
@@ -211,21 +242,18 @@ export default function ProductFormPage() {
           </Field>
         </div>
 
-        {/* Descripción corta */}
         <Field label="Descripción corta (para la card)">
           <input name="shortDesc" value={form.shortDesc}
             onChange={handleChange} className={inputCls}
             placeholder="Primera prensada en frío · 500ml" />
         </Field>
 
-        {/* Descripción larga */}
         <Field label="Descripción completa">
           <textarea name="description" value={form.description}
             onChange={handleChange} rows={4}
             className={`${inputCls} resize-none`} />
         </Field>
 
-        {/* Precio + Precio anterior + Stock */}
         <div className="grid grid-cols-3 gap-4">
           <Field label="Precio *">
             <input name="price" type="number" min={0} required
@@ -242,7 +270,6 @@ export default function ProductFormPage() {
           </Field>
         </div>
 
-        {/* Volumen + Origen + Acidez */}
         <div className="grid grid-cols-3 gap-4">
           <Field label="Volumen (ej: 500ml)">
             <input name="volume" value={form.volume ?? ''}
@@ -258,10 +285,8 @@ export default function ProductFormPage() {
           </Field>
         </div>
 
-        {/* Tags */}
         <Field label="Tags (separados por coma)">
           <input
-            name="tags"
             value={form.tags.join(', ')}
             onChange={e => setForm(prev => ({
               ...prev,
@@ -272,16 +297,10 @@ export default function ProductFormPage() {
           />
         </Field>
 
-        {/* Featured */}
         <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="featured"
-            name="featured"
-            checked={form.featured}
-            onChange={handleChange}
-            className="w-4 h-4 accent-green-deep"
-          />
+          <input type="checkbox" id="featured" name="featured"
+            checked={form.featured} onChange={handleChange}
+            className="w-4 h-4 accent-green-deep" />
           <label htmlFor="featured"
             className="text-sm text-green-deep font-light cursor-pointer">
             Mostrar en productos destacados del home
@@ -310,7 +329,6 @@ export default function ProductFormPage() {
               </div>
             ))}
 
-            {/* Upload button */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -318,7 +336,7 @@ export default function ProductFormPage() {
               className="w-24 h-24 border-2 border-dashed border-cream-warm
                          flex flex-col items-center justify-center gap-1
                          text-gray-400 hover:border-gold hover:text-gold
-                         transition-colors disabled:opacity-50"
+                         transition-colors disabled:opacity-50 cursor-pointer"
             >
               {uploading ? (
                 <span className="text-xs font-medium text-green-olive">{uploadPct}%</span>
@@ -339,11 +357,10 @@ export default function ProductFormPage() {
             onChange={handleImageUpload}
           />
           <p className="text-[11px] text-gray-400 font-light">
-            JPG, PNG o WEBP · Máximo 5MB por imagen
+            JPG, PNG o WEBP · Máximo 5MB · Las imágenes se guardan en Cloudinary
           </p>
         </div>
 
-        {/* Preview precio */}
         {form.price > 0 && (
           <div className="bg-cream p-4 border border-cream-warm">
             <p className="text-[10px] tracking-[0.2em] uppercase text-green-olive mb-1 font-light">
@@ -362,20 +379,13 @@ export default function ProductFormPage() {
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex gap-4 pt-4">
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={saving}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
             {saving ? 'Guardando…' : isNew ? 'Crear producto' : 'Guardar cambios'}
           </button>
-          <button
-            type="button"
-            onClick={() => router.push('/admin/productos')}
-            className="btn-secondary"
-          >
+          <button type="button" onClick={() => router.push('/admin/productos')}
+            className="btn-secondary">
             Cancelar
           </button>
         </div>
@@ -384,7 +394,6 @@ export default function ProductFormPage() {
   )
 }
 
-// Helpers de UI
 const inputCls = `w-full border border-cream-warm bg-white px-3 py-2.5
                   text-sm text-green-deep font-light
                   focus:outline-none focus:border-gold transition-colors`
