@@ -1,3 +1,4 @@
+import Image          from 'next/image'
 import Link            from 'next/link'
 import { getProducts } from '@/lib/firestore'
 import ProductCard     from '@/components/product/ProductCard'
@@ -11,11 +12,11 @@ const CATEGORIES: {
   count:    string
   bg:       string
 }[] = [
-  { slug: 'aceites',    label: 'Aceites de Oliva',  sublabel: 'Virgen extra · Primera prensada',  count: '12 productos', bg: 'from-green-mid to-green-olive'  },
-  { slug: 'varietales', label: 'Varietales',         sublabel: 'Monovarietales seleccionados',     count: '8 productos',  bg: 'from-[#1a4a28] to-[#3d6b35]'   },
-  { slug: 'acetos',     label: 'Acetos',             sublabel: 'Añejados artesanalmente',          count: '6 productos',  bg: 'from-[#5a1a0a] to-[#8f2412]'   },
-  { slug: 'aceitunas',  label: 'Aceitunas',          sublabel: 'Marinadas y al natural',           count: '9 productos',  bg: 'from-green-deep to-green-mid'   },
-  { slug: 'salsas',     label: 'Salsas',             sublabel: 'Con base de aceite de oliva',      count: '7 productos',  bg: 'from-[#4a2800] to-[#8b5e3c]'   },
+  { slug: 'aceites',    label: 'Aceites de Oliva', sublabel: 'Virgen extra · Primera prensada', count: '12 productos', bg: 'from-green-mid to-green-olive' },
+  { slug: 'varietales', label: 'Varietales',        sublabel: 'Monovarietales seleccionados',    count: '8 productos',  bg: 'from-[#1a4a28] to-[#3d6b35]'  },
+  { slug: 'acetos',     label: 'Acetos',            sublabel: 'Añejados artesanalmente',         count: '6 productos',  bg: 'from-[#5a1a0a] to-[#8f2412]'  },
+  { slug: 'aceitunas',  label: 'Aceitunas',         sublabel: 'Marinadas y al natural',          count: '9 productos',  bg: 'from-green-deep to-green-mid'  },
+  { slug: 'salsas',     label: 'Salsas',            sublabel: 'Con base de aceite de oliva',     count: '7 productos',  bg: 'from-[#4a2800] to-[#8b5e3c]'  },
 ]
 
 const STRIP_ITEMS = [
@@ -37,30 +38,47 @@ export default async function HomePage() {
         className="relative min-h-[88vh] grid grid-cols-1 md:grid-cols-2 overflow-hidden"
         style={{ backgroundColor: '#18532c' }}
       >
+        {/* Imagen de fondo */}
+        <Image
+          src="/imagenes/olivares2.jpg"
+          alt=""
+          fill
+          className="object-cover object-center"
+          priority
+        />
+
+        {/* Overlay verde para mantener legibilidad */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: 'rgba(24, 83, 44, 0.78)' }}
+        />
+
         {/* Radial glow */}
-        <div className="absolute inset-0 pointer-events-none"
-             style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(237,131,43,0.08) 0%, transparent 60%)' }} />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(237,131,43,0.08) 0%, transparent 60%)' }}
+        />
 
         <div className="relative z-10 flex flex-col justify-center
                         px-10 md:px-20 py-20 animate-fade-up">
-          <p className="text-[11px] tracking-[0.28em] uppercase font-light mb-6"
-             style={{ color: '#ed832b' }}>
+          <p
+            className="text-[11px] tracking-[0.28em] uppercase font-light mb-6"
+            style={{ color: '#ed832b' }}
+          >
             Cuyo · San Juan · Argentina
           </p>
           <h1
             className="font-serif font-light leading-[1.05] mb-6"
-            style={{
-              color:    '#fff0dc',
-              fontSize: 'clamp(3rem, 6vw, 5rem)',
-            }}
+            style={{ color: '#fff0dc', fontSize: 'clamp(3rem, 6vw, 5rem)' }}
           >
             Productos<br />
             regionales<br />
             con <em className='italic text-gold-light' >identidad</em>
           </h1>
-          
-          <p className="font-light text-base leading-relaxed max-w-md mb-10"
-             style={{ color: 'rgba(255,240,220,0.65)' }}>
+          <p
+            className="font-light text-base leading-relaxed max-w-md mb-10"
+            style={{ color: 'rgba(255,240,220,0.65)' }}
+          >
             Seleccionamos productos de pequeños y medianos productores de Cuyo.
             Cada uno tiene una historia, un origen y un sabor que vale la pena conocer.
           </p>
@@ -132,15 +150,21 @@ export default async function HomePage() {
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${cat.bg}
                                transition-transform duration-500 group-hover:scale-105`} />
-              <div className="absolute inset-0"
-                   style={{ background: 'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)' }} />
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)' }}
+              />
               <div className="absolute bottom-0 left-0 right-0 p-5">
-                <p className="font-serif text-[1.2rem] leading-tight"
-                   style={{ color: '#fff0dc' }}>
+                <p
+                  className="font-serif text-[1.2rem] leading-tight"
+                  style={{ color: '#fff0dc' }}
+                >
                   {cat.label}
                 </p>
-                <p className="text-[10px] tracking-wider uppercase mt-1 font-light"
-                   style={{ color: 'rgba(255,240,220,0.65)' }}>
+                <p
+                  className="text-[10px] tracking-wider uppercase mt-1 font-light"
+                  style={{ color: 'rgba(255,240,220,0.65)' }}
+                >
                   {cat.count}
                 </p>
               </div>
@@ -194,8 +218,10 @@ export default async function HomePage() {
         </div>
 
         <div className="relative z-10">
-          <p className="text-[11px] tracking-[0.28em] uppercase font-light mb-4"
-             style={{ color: '#ed832b' }}>
+          <p
+            className="text-[11px] tracking-[0.28em] uppercase font-light mb-4"
+            style={{ color: '#ed832b' }}
+          >
             Por qué Calixto
           </p>
           <h2
@@ -208,8 +234,10 @@ export default async function HomePage() {
               No con volumen.
             </em>
           </h2>
-          <p className="font-light leading-[1.85] text-sm mb-9 max-w-lg"
-             style={{ color: 'rgba(255,240,220,0.6)' }}>
+          <p
+            className="font-light leading-[1.85] text-sm mb-9 max-w-lg"
+            style={{ color: 'rgba(255,240,220,0.6)' }}
+          >
             Cada producto que ofrecemos pasó por una decisión consciente.
             Trabajamos con pequeños y medianos productores de Cuyo que priorizan
             la calidad y el origen por sobre la producción masiva.
@@ -225,20 +253,26 @@ export default async function HomePage() {
           </Link>
 
           {/* Stats */}
-          <div className="flex gap-12 mt-10 pt-10"
-               style={{ borderTop: '1px solid rgba(255,240,220,0.1)' }}>
+          <div
+            className="flex gap-12 mt-10 pt-10"
+            style={{ borderTop: '1px solid rgba(255,240,220,0.1)' }}
+          >
             {[
-              { num: 'Cuyo',    lbl: 'Nuestra región'      },
-              { num: 'Real',    lbl: 'Origen verificado'   },
-              { num: '100%',    lbl: 'Sin intermediarios'  },
+              { num: 'Cuyo',  lbl: 'Nuestra región'    },
+              { num: 'Real',  lbl: 'Origen verificado' },
+              { num: '100%',  lbl: 'Sin intermediarios'},
             ].map(({ num, lbl }) => (
               <div key={lbl}>
-                <p className="font-serif text-[2rem] font-normal leading-none"
-                   style={{ color: '#fff0dc' }}>
+                <p
+                  className="font-serif text-[2rem] font-normal leading-none"
+                  style={{ color: '#fff0dc' }}
+                >
                   {num}
                 </p>
-                <p className="text-[10px] tracking-[0.15em] uppercase mt-1.5 font-light"
-                   style={{ color: 'rgba(255,240,220,0.4)' }}>
+                <p
+                  className="text-[10px] tracking-[0.15em] uppercase mt-1.5 font-light"
+                  style={{ color: 'rgba(255,240,220,0.4)' }}
+                >
                   {lbl}
                 </p>
               </div>
@@ -256,12 +290,16 @@ export default async function HomePage() {
         className="py-20 text-center"
         style={{ backgroundColor: '#8f2412' }}
       >
-        <p className="text-[11px] tracking-[0.28em] uppercase font-light mb-4"
-           style={{ color: '#ed832b' }}>
+        <p
+          className="text-[11px] tracking-[0.28em] uppercase font-light mb-4"
+          style={{ color: '#ed832b' }}
+        >
           Sabores de altura
         </p>
-        <h2 className="font-serif text-4xl font-light mb-8"
-            style={{ color: '#fff0dc' }}>
+        <h2
+          className="font-serif text-4xl font-light mb-8"
+          style={{ color: '#fff0dc' }}
+        >
           Cada producto tiene<br />
           <em className="italic">una historia</em>
         </h2>
