@@ -12,7 +12,7 @@ const CATEGORIES: {
   count:    string
   bg:       string
 }[] = [
-  { slug: 'aceites',    label: 'Aceites de Oliva', sublabel: 'Virgen extra · Primera prensada', count: '12 productos', bg: 'from-green-mid to-green-olive' },
+  { slug: 'aceites',    label: 'Aceites de Oliva', sublabel: 'Virgen extra · Primera prensada', count: '10 productos', bg: 'from-green-mid to-green-olive' },
   { slug: 'varietales', label: 'Varietales',        sublabel: 'Monovarietales seleccionados',    count: '8 productos',  bg: 'from-[#1a4a28] to-[#3d6b35]'  },
   { slug: 'acetos',     label: 'Acetos',            sublabel: 'Añejados artesanalmente',         count: '6 productos',  bg: 'from-[#5a1a0a] to-[#8f2412]'  },
   { slug: 'aceitunas',  label: 'Aceitunas',         sublabel: 'Marinadas y al natural',          count: '9 productos',  bg: 'from-green-deep to-green-mid'  },
