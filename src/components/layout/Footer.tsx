@@ -24,7 +24,7 @@ const LINKS = {
 
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: '#8f2412' }}>
+    <footer style={{ backgroundColor: '#1c1c1c' }}>
       <div className="max-w-screen-xl mx-auto px-8 md:px-20 pt-16 pb-8">
 
         {/* Top grid */}
