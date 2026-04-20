@@ -13,7 +13,7 @@ import toast                           from 'react-hot-toast'
 import type { Product, ProductCategory } from '@/types'
 
 const CATEGORIES: ProductCategory[] = [
-  'aceites', 'varietales', 'acetos', 'aceitunas', 'salsas'
+  'aceites', 'varietales', 'acetos', 'aceitunas', 'especiales'
 ]
 
 const EMPTY: Omit<Product, 'id' | 'createdAt'> = {

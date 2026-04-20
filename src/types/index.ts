@@ -4,14 +4,14 @@ export type ProductCategory =
   | 'varietales'
   | 'acetos'
   | 'aceitunas'
-  | 'salsas'
+  | 'especiales'
 
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   aceites:    'Aceite de Oliva',
   varietales: 'Varietal',
   acetos:     'Aceto',
   aceitunas:  'Aceitunas',
-  salsas:     'Salsa',
+  especiales:     'Especiales Gourmet',
 }
 
 // ── Producto ───────────────────────────────────────────────────────────────

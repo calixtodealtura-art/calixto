@@ -24,7 +24,7 @@
   }
 
   body {
-    font-family: var(--font-jost);
+    font-family: var(--font-lora);
     background-color: #fdfaf5;
     color: #1c1c1c;
     overflow-x: hidden;

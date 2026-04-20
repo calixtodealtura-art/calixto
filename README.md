@@ -142,13 +142,13 @@ Abrí [http://localhost:3000](http://localhost:3000)
 
 ## Categorías de productos
 
-| Slug        | Label            |
-|-------------|------------------|
-| aceites     | Aceite de Oliva  |
-| varietales  | Varietal         |
-| acetos      | Aceto            |
-| aceitunas   | Aceitunas        |
-| salsas      | Salsa            |
+| Slug        | Label             |
+|-------------|-------------------|
+| aceites     | Aceite de Oliva   |
+| varietales  | Varietal          |
+| acetos      | Aceto             |
+| aceitunas   | Aceitunas         |
+| especiales  | Especiales Gourmet|
 
 ---
 

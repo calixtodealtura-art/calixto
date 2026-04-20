@@ -7,17 +7,13 @@ const LINKS = {
     { label: 'Varietales',       href: '/productos?categoria=varietales' },
     { label: 'Acetos',           href: '/productos?categoria=acetos'     },
     { label: 'Aceitunas',        href: '/productos?categoria=aceitunas'  },
-    { label: 'Salsas',           href: '/productos?categoria=salsas'     },
+    { label: 'Especiales Gourmet', href: '/productos?categoria=especiales'     },
   ],
   'Empresa': [
     { label: 'Nuestra historia', href: '/nosotros'        },
-    { label: 'El origen',        href: '/nosotros#origen' },
-    { label: 'Recetas',          href: '/recetas'         },
+    { label: 'El origen',        href: '/nosotros#origen' }
   ],
   'Ayuda': [
-    { label: 'Envíos',               href: '/envios'       },
-    { label: 'Devoluciones',         href: '/devoluciones' },
-    { label: 'Preguntas frecuentes', href: '/faq'          },
     { label: 'Contacto',             href: '/contacto'     },
   ],
 }

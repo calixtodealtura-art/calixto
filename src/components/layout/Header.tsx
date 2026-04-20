@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { label: 'Varietales', href: '/productos?categoria=varietales' },
   { label: 'Acetos',     href: '/productos?categoria=acetos'     },
   { label: 'Aceitunas',  href: '/productos?categoria=aceitunas'  },
-  { label: 'Salsas',     href: '/productos?categoria=salsas'     },
+  { label: 'Especiales Gourmet',     href: '/productos?categoria=especiales'     },
   { label: 'Nosotros',   href: '/nosotros'                       },
 ]
 
@@ -31,7 +31,7 @@ export default function Header() {
     <>
       {/* Announcement bar */}
       <div className="bg-green-deep text-cream text-[11px] tracking-[0.18em] uppercase text-center py-2.5 px-4 font-light">
-        Envío gratis a CABA y GBA · Resto del país a partir de $120.000 · 12 cuotas sin interés
+        Envío gratis a CABA y GBA · Resto del país a partir de $200.000 
       </div>
 
       <header className="sticky top-0 z-50 bg-ivory border-b border-cream-warm">

@@ -5,18 +5,17 @@ import ProductCard     from '@/components/product/ProductCard'
 import CalixtIcon      from '@/components/ui/CalixtIcon'
 import type { ProductCategory } from '@/types'
 
-const CATEGORIES: {
+const CATEGORY_CONFIG: {
   slug:     ProductCategory
   label:    string
   sublabel: string
-  count:    string
   bg:       string
 }[] = [
-  { slug: 'aceites',    label: 'Aceites de Oliva', sublabel: 'Virgen extra · Primera prensada', count: '10 productos', bg: 'from-green-mid to-green-olive' },
-  { slug: 'varietales', label: 'Varietales',        sublabel: 'Monovarietales seleccionados',    count: '8 productos',  bg: 'from-[#1a4a28] to-[#3d6b35]'  },
-  { slug: 'acetos',     label: 'Acetos',            sublabel: 'Añejados artesanalmente',         count: '6 productos',  bg: 'from-[#5a1a0a] to-[#8f2412]'  },
-  { slug: 'aceitunas',  label: 'Aceitunas',         sublabel: 'Marinadas y al natural',          count: '9 productos',  bg: 'from-green-deep to-green-mid'  },
-  { slug: 'salsas',     label: 'Salsas',            sublabel: 'Con base de aceite de oliva',     count: '7 productos',  bg: 'from-[#4a2800] to-[#8b5e3c]'  },
+  { slug: 'aceites',    label: 'Aceites de Oliva',   sublabel: 'Virgen extra · Primera prensada', bg: 'from-green-mid to-green-olive' },
+  { slug: 'varietales', label: 'Varietales',          sublabel: 'Monovarietales seleccionados',    bg: 'from-[#1a4a28] to-[#3d6b35]'  },
+  { slug: 'acetos',     label: 'Acetos',              sublabel: 'Añejados artesanalmente',         bg: 'from-[#5a1a0a] to-[#8f2412]'  },
+  { slug: 'aceitunas',  label: 'Aceitunas',           sublabel: 'Marinadas y al natural',          bg: 'from-green-deep to-green-mid'  },
+  { slug: 'especiales', label: 'Especiales Gourmet',  sublabel: 'Con base de aceite de oliva',     bg: 'from-[#4a2800] to-[#8b5e3c]'  },
 ]
 
 const STRIP_ITEMS = [
@@ -29,7 +28,20 @@ const STRIP_ITEMS = [
 ]
 
 export default async function HomePage() {
-  const featured = await getProducts({ featured: true, limitN: 8 }).catch(() => [])
+  // Traemos todos los productos y los destacados en paralelo
+  const [allProducts, featured] = await Promise.all([
+    getProducts().catch(() => []),
+    getProducts({ featured: true, limitN: 8 }).catch(() => []),
+  ])
+
+  // Contamos los productos por categoría desde los datos reales
+  const countByCategory = allProducts.reduce<Record<string, number>>(
+    (acc, product) => {
+      acc[product.category] = (acc[product.category] ?? 0) + 1
+      return acc
+    },
+    {}
+  )
 
   return (
     <>
@@ -38,7 +50,6 @@ export default async function HomePage() {
         className="relative min-h-[88vh] grid grid-cols-1 md:grid-cols-2 overflow-hidden"
         style={{ backgroundColor: '#18532c' }}
       >
-        {/* Imagen de fondo */}
         <Image
           src="/imagenes/olivares2.jpg"
           alt=""
@@ -46,14 +57,10 @@ export default async function HomePage() {
           className="object-cover object-center"
           priority
         />
-
-        {/* Overlay verde para mantener legibilidad */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: 'rgba(24, 83, 44, 0.78)' }}
         />
-
-        {/* Radial glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(237,131,43,0.08) 0%, transparent 60%)' }}
@@ -105,7 +112,6 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Visual derecho */}
         <div className="hidden md:flex items-center justify-center p-12 relative z-10">
           <CalixtIcon
             color="#fff0dc"
@@ -142,34 +148,39 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {CATEGORIES.map(cat => (
-            <Link
-              key={cat.slug}
-              href={`/productos?categoria=${cat.slug}`}
-              className="group relative aspect-[3/4] overflow-hidden"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${cat.bg}
-                               transition-transform duration-500 group-hover:scale-105`} />
-              <div
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)' }}
-              />
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <p
-                  className="font-serif text-[1.2rem] leading-tight"
-                  style={{ color: '#fff0dc' }}
-                >
-                  {cat.label}
-                </p>
-                <p
-                  className="text-[10px] tracking-wider uppercase mt-1 font-light"
-                  style={{ color: 'rgba(255,240,220,0.65)' }}
-                >
-                  {cat.count}
-                </p>
-              </div>
-            </Link>
-          ))}
+          {CATEGORY_CONFIG.map(cat => {
+            const count = countByCategory[cat.slug] ?? 0
+            return (
+              <Link
+                key={cat.slug}
+                href={`/productos?categoria=${cat.slug}`}
+                className="group relative aspect-[3/4] overflow-hidden"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${cat.bg}
+                                 transition-transform duration-500 group-hover:scale-105`} />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)' }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <p
+                    className="font-serif text-[1.2rem] leading-tight"
+                    style={{ color: '#fff0dc' }}
+                  >
+                    {cat.label}
+                  </p>
+                  <p
+                    className="text-[10px] tracking-wider uppercase mt-1 font-light"
+                    style={{ color: 'rgba(255,240,220,0.65)' }}
+                  >
+                    {count === 0
+                      ? 'Próximamente'
+                      : `${count} ${count === 1 ? 'producto' : 'productos'}`}
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </section>
 
@@ -207,7 +218,6 @@ export default async function HomePage() {
                    gap-16 items-center relative overflow-hidden"
         style={{ backgroundColor: '#18532c' }}
       >
-        {/* Texto decorativo */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none select-none">
           <span
             className="font-serif font-bold leading-none"
@@ -252,7 +262,6 @@ export default async function HomePage() {
             Conocer más
           </Link>
 
-          {/* Stats */}
           <div
             className="flex gap-12 mt-10 pt-10"
             style={{ borderTop: '1px solid rgba(255,240,220,0.1)' }}
@@ -283,34 +292,6 @@ export default async function HomePage() {
         <div className="hidden md:flex items-center justify-center relative z-10">
           <CalixtIcon color="rgba(255,240,220,0.12)" size={320} />
         </div>
-      </section>
-
-      {/* ── CTA FINAL ─────────────────────────────────────────────────── */}
-      <section
-        className="py-20 text-center"
-        style={{ backgroundColor: '#8f2412' }}
-      >
-        <p
-          className="text-[11px] tracking-[0.28em] uppercase font-light mb-4"
-          style={{ color: '#ed832b' }}
-        >
-          Sabores de altura
-        </p>
-        <h2
-          className="font-serif text-4xl font-light mb-8"
-          style={{ color: '#fff0dc' }}
-        >
-          Cada producto tiene<br />
-          <em className="italic">una historia</em>
-        </h2>
-        <Link
-          href="/productos"
-          className="inline-block px-9 py-3.5 text-xs tracking-widest uppercase font-medium
-                     transition-all duration-300 hover:-translate-y-0.5"
-          style={{ backgroundColor: '#fff0dc', color: '#18532c' }}
-        >
-          Ver toda la selección
-        </Link>
       </section>
     </>
   )
