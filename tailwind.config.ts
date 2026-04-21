@@ -42,7 +42,7 @@ const config: Config = {
       fontFamily: {
         // Lora es la tipografía corporativa oficial de Calixto
         serif: ['var(--font-lora)', 'Georgia', 'serif'],
-        sans:  ['var(--font-jost)', 'system-ui', 'sans-serif'],
+        sans:  ['var(--font-lora)', 'Georgia', 'serif'],
       },
       animation: {
         'float':     'float 4s ease-in-out infinite',

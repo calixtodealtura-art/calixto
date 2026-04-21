@@ -4,6 +4,7 @@ import AuthProvider       from '@/components/layout/AuthProvider'
 import Header             from '@/components/layout/Header'
 import Footer             from '@/components/layout/Footer'
 import CartDrawer         from '@/components/cart/CartDrawer'
+import WhatsAppButton from '@/components/ui/WhatsAppButton'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
         <AuthProvider>
           <Header />
           <CartDrawer />
+          <WhatsAppButton />
           <main>{children}</main>
           <Toaster
             position="bottom-center"
