@@ -76,12 +76,9 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            <button aria-label="Buscar" className="text-green-deep hover:text-orange transition-colors">
-              <Search size={19} strokeWidth={1.5} />
-            </button>
-
+           
             <Link
-              href={user ? '/cuenta' : '/login'}
+              href={user ? '/admin' : '/admin'}
               aria-label="Mi cuenta"
               className="text-green-deep hover:text-orange transition-colors"
             >
