@@ -97,3 +97,29 @@ export interface Order {
   paidAt?:        Date | null
   updatedAt?:     Date
 }
+// ─────────────────────────────────────────────────────────────
+// COMBOS
+// ─────────────────────────────────────────────────────────────
+
+export interface ComboItem {
+  productId:   string
+  productName: string
+  quantity:    number
+  unitPrice:   number  // precio individual al momento de crear el combo
+}
+
+export interface Combo {
+  id:          string
+  name:        string
+  slug:        string
+  description: string
+  items:       ComboItem[]
+  comboPrice:  number    // precio promocional
+  fullPrice:   number    // suma de precios individuales (calculado)
+  savings:     number    // fullPrice - comboPrice (calculado)
+  images:      string[]
+  featured:    boolean
+  active:      boolean
+  badge?:      string
+  createdAt:   Date
+}

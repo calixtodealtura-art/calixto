@@ -6,7 +6,7 @@ import { useEffect, useState }     from 'react'
 import { signOut }                 from 'firebase/auth'
 import { collection, query, where, getCountFromServer } from 'firebase/firestore'
 import { auth, db }                from '@/lib/firebase'
-import { ShoppingBag, Package, BarChart2, Truck, MessageSquare, LogOut } from 'lucide-react'
+import { ShoppingBag, Package, BarChart2, Truck, MessageSquare, LogOut, Package2 } from 'lucide-react'
 import { cn }                      from '@/lib/utils'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -40,6 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const NAV = [
     { href: '/admin/ordenes',   label: 'Órdenes',   icon: ShoppingBag,   badge: null   },
     { href: '/admin/productos', label: 'Productos',  icon: Package,       badge: null   },
+    { href: '/admin/combos', label: 'Combos', icon: Package2, badge: null },
     { href: '/admin/stock',     label: 'Stock',      icon: BarChart2,     badge: null   },
     { href: '/admin/mensajes',  label: 'Mensajes',   icon: MessageSquare, badge: unread },
   ]
