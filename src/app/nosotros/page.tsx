@@ -43,7 +43,7 @@ export default function NosotrosPage() {
             style={{ fontSize: 'clamp(3rem, 6vw, 5rem)' }}
           >
             Una selección<br />
-            con <em className="italic" style={{ color: '#fff0dc' }}>criterio</em>
+            con <em className='not-italic text-gold-light' >criterio</em>
           </h1>
           <p className="text-cream/60 font-light text-base leading-relaxed max-w-xl">
             Calixto nace inspirado en la cordillera y en la identidad de la región de Cuyo.
@@ -60,7 +60,7 @@ export default function NosotrosPage() {
           <p className="section-label">Nuestro propósito</p>
           <h2 className="section-title mb-8">
             Del productor<br />
-            <em className="italic text-green-olive">a tu mesa</em>
+            <em className='not-italic text-gold-light' >a tu mesa</em>
           </h2>
           <p className="text-gray-600 font-light leading-[1.85] text-sm mb-6">
             Poner en valor los productos regionales y a quienes los producen, generando un vínculo
@@ -76,11 +76,18 @@ export default function NosotrosPage() {
 
         {/* Panel verde con logo */}
         <div
-          className="flex items-center justify-center aspect-square max-w-sm mx-auto w-full"
-          style={{ backgroundColor: '#18532c' }}
-        >
-          <LogoPrincipal color="#fff0dc" size={220} />
-        </div>
+            className="relative flex items-center justify-center aspect-square max-w-sm mx-auto w-full overflow-hidden"
+          >
+            <Image
+              src="/imagenes/portada.png"
+              alt=""
+              fill
+              className="object-cover object-center"
+              priority
+            />
+
+            <LogoPrincipal color="#fff0dc" size={220} className="relative z-10" />
+          </div>
       </section>
 
       {/* ── MISIÓN Y VISIÓN ──────────────────────────────────────────── */}
@@ -99,7 +106,7 @@ export default function NosotrosPage() {
             </div>
             <h2 className="font-serif text-3xl font-light text-green-deep mb-6 leading-tight">
               Un puente entre<br />el origen y el<br />
-              <em className="italic text-green-olive">consumidor</em>
+              <em className='not-italic text-gold-light'>consumidor</em>
             </h2>
             <p className="text-gray-600 font-light leading-[1.85] text-sm">
               Seleccionar y comercializar productos de pequeños y medianos productores de la región
@@ -120,7 +127,7 @@ export default function NosotrosPage() {
             </div>
             <h2 className="font-serif text-3xl font-light text-green-deep mb-6 leading-tight">
               Referentes en<br />productos regionales<br />
-              <em className="italic text-green-olive">a nivel nacional</em>
+              <em className='not-italic text-gold-light'>a nivel nacional</em>
             </h2>
             <p className="text-gray-600 font-light leading-[1.85] text-sm">
               Ser una marca referente en productos regionales a nivel nacional, reconocida por
@@ -137,7 +144,7 @@ export default function NosotrosPage() {
         <div className="text-center mb-16">
           <p className="section-label">Lo que nos guía</p>
           <h2 className="section-title">
-            Nuestros <em className="italic text-green-olive">valores</em>
+            Nuestros <em className='not-italic text-gold-light'>valores</em>
           </h2>
         </div>
 

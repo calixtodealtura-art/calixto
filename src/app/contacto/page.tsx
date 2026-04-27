@@ -8,13 +8,13 @@ import toast         from 'react-hot-toast'
 const CONTACT_INFO = [
   {
     label: 'Email',
-    value: 'hola@calixto.com.ar',
-    href:  'mailto:hola@calixto.com.ar',
+    value: 'calixtodealtura@gmail.com',
+    href:  'mailto:calixtodealtura@gmail.com',
   },
   {
     label: 'WhatsApp',
-    value: '+54 9 264 000-0000',
-    href:  'https://wa.me/5492640000000',
+    value: '+54 9 11 3905-6519',
+    href:  'https://wa.me/5491139056519',
   },
 ]
 

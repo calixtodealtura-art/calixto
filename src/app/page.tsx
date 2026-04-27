@@ -10,12 +10,13 @@ const CATEGORY_CONFIG: {
   label:    string
   sublabel: string
   bg:       string
+  image: string
 }[] = [
-  { slug: 'aceites',    label: 'Aceites de Oliva',   sublabel: 'Virgen extra · Primera prensada', bg: 'from-green-mid to-green-olive' },
-  { slug: 'varietales', label: 'Varietales',          sublabel: 'Monovarietales seleccionados',    bg: 'from-[#1a4a28] to-[#3d6b35]'  },
-  { slug: 'acetos',     label: 'Acetos',              sublabel: 'Añejados artesanalmente',         bg: 'from-[#5a1a0a] to-[#8f2412]'  },
-  { slug: 'aceitunas',  label: 'Aceitunas',           sublabel: 'Marinadas y al natural',          bg: 'from-green-deep to-green-mid'  },
-  { slug: 'especiales', label: 'Especiales Gourmet',  sublabel: 'Con base de aceite de oliva',     bg: 'from-[#4a2800] to-[#8b5e3c]'  },
+  { slug: 'aceites',    label: 'Aceites de Oliva',   sublabel: 'Virgen extra · Primera prensada', bg: 'from-green-mid to-green-olive', image: '/imagenes/aceite.png' },
+  { slug: 'varietales', label: 'Varietales',          sublabel: 'Monovarietales seleccionados',    bg: 'from-[#1a4a28] to-[#3d6b35]' , image: '/imagenes/aceite.png' },
+  { slug: 'acetos',     label: 'Acetos',              sublabel: 'Añejados artesanalmente',         bg: 'from-[#5a1a0a] to-[#8f2412]' , image: '/imagenes/aceite.png'  },
+  { slug: 'aceitunas',  label: 'Aceitunas',           sublabel: 'Marinadas y al natural',          bg: 'from-green-deep to-green-mid' , image: '/imagenes/aceituna.png'  },
+  { slug: 'especiales', label: 'Especiales Gourmet',  sublabel: 'Con base de aceite de oliva',     bg: 'from-[#4a2800] to-[#8b5e3c]' , image: '/imagenes/especiales.png'  },
 ]
 
 const STRIP_ITEMS = [
@@ -57,10 +58,10 @@ export default async function HomePage() {
           className="object-cover object-center"
           priority
         />
-        <div
+       {/* <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: 'rgba(24, 83, 44, 0.78)' }}
-        />
+        />*/}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(237,131,43,0.08) 0%, transparent 60%)' }}
@@ -146,27 +147,40 @@ export default async function HomePage() {
             Ver todo →
           </Link>
         </div>
-
+        {/* ── Cuadros de categorias ──────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {CATEGORY_CONFIG.map(cat => {
             const count = countByCategory[cat.slug] ?? 0
+
             return (
               <Link
                 key={cat.slug}
                 href={`/productos?categoria=${cat.slug}`}
                 className="group relative aspect-[3/4] overflow-hidden"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${cat.bg}
-                                 transition-transform duration-500 group-hover:scale-105`} />
+                {/* Imagen de fondo */}
+                <Image
+                  src={cat.image}
+                  alt={cat.label}
+                  fill
+                  className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                />
+
+                {/* Overlay oscuro */}
+                <div className="absolute inset-0 bg-black/40" />
+
+                {/* Gradiente encima */}
                 <div
                   className="absolute inset-0"
-                  style={{ background: 'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)' }}
+                  style={{
+                    background:
+                      'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)',
+                  }}
                 />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p
-                    className="font-serif text-[1.2rem] leading-tight"
-                    style={{ color: '#fff0dc' }}
-                  >
+
+                {/* Contenido */}
+                <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                  <p className="font-serif text-[1.2rem]" style={{ color: '#fff0dc' }}>
                     {cat.label}
                   </p>
                   <p
@@ -182,6 +196,8 @@ export default async function HomePage() {
             )
           })}
         </div>
+
+
       </section>
 
       {/* ── PRODUCTOS DESTACADOS ──────────────────────────────────────── */}
