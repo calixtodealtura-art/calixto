@@ -51,7 +51,7 @@ export default async function HomePage() {
         style={{ backgroundColor: '#18532c' }}
       >
         <Image
-          src="/imagenes/olivares2.jpg"
+          src="/imagenes/portada.png"
           alt=""
           fill
           className="object-cover object-center"
@@ -80,7 +80,7 @@ export default async function HomePage() {
           >
             Productos<br />
             regionales<br />
-            con <em className='italic text-gold-light' >identidad</em>
+            con <em className='not-italic text-gold-light' >identidad</em>
           </h1>
           <p
             className="font-light text-base leading-relaxed max-w-md mb-10"
@@ -139,7 +139,7 @@ export default async function HomePage() {
             <p className="section-label">Nuestra selección</p>
             <h2 className="section-title">
               Productos con<br />
-              <em className="italic text-green-olive">origen y criterio</em>
+              <em className="not-italic text-gold-light">origen y criterio</em>
             </h2>
           </div>
           <Link href="/productos" className="btn-ghost hidden md:inline-block">
@@ -191,7 +191,7 @@ export default async function HomePage() {
             <p className="section-label">Productos destacados</p>
             <h2 className="section-title">
               Los más<br />
-              <em className="italic text-green-olive">elegidos</em>
+              <em className="not-italic text-gold-light">elegidos</em>
             </h2>
           </div>
           <Link href="/productos" className="btn-ghost hidden md:inline-block">
@@ -240,7 +240,7 @@ export default async function HomePage() {
           >
             Una selección<br />
             con criterio.<br />
-            <em className="italic" style={{ color: 'rgba(255,240,220,0.7)' }}>
+            <em className="not-italic text-gold-light" >
               No con volumen.
             </em>
           </h2>
@@ -268,7 +268,6 @@ export default async function HomePage() {
           >
             {[
               { num: 'Cuyo',  lbl: 'Nuestra región'    },
-              { num: 'Real',  lbl: 'Origen verificado' },
               { num: '100%',  lbl: 'Sin intermediarios'},
             ].map(({ num, lbl }) => (
               <div key={lbl}>

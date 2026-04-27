@@ -1,4 +1,5 @@
 import LogoPrincipal from '@/components/ui/LogoPrincipal'
+import Image          from 'next/image'
 
 export default function NosotrosPage() {
   return (
@@ -9,7 +10,18 @@ export default function NosotrosPage() {
         className="relative min-h-[70vh] flex items-end"
         style={{ backgroundColor: '#18532c' }}
       >
+        <Image
+                  src="/imagenes/portada2.png"
+                  alt=""
+                  fill
+                  className="object-cover object-center"
+                  priority
+                />
         {/* Texto decorativo de fondo */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: 'rgba(24, 83, 44, 0.78)' }}
+        />
         <div
           className="absolute inset-0 flex items-center justify-center
                      pointer-events-none select-none overflow-hidden"
@@ -174,93 +186,6 @@ export default function NosotrosPage() {
             </div>
           ))}
         </div>
-      </section>
-
-      {/* ── PERSONALIDAD ─────────────────────────────────────────────── */}
-      <section style={{ backgroundColor: '#18532c' }} className="py-24">
-        <div className="max-w-screen-xl mx-auto px-8 md:px-20">
-          <div className="text-center mb-16">
-            <p className="text-[11px] tracking-[0.28em] uppercase text-orange font-light mb-3">
-              Nuestra voz
-            </p>
-            <h2 className="font-serif text-4xl font-light text-cream">
-              Auténtica · Elegante · <em className="italic" style={{ color: '#fff0dc' }}>Cercana</em>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-3xl mx-auto">
-            <div className="border-l-2 border-orange pl-8">
-              <h3 className="font-serif text-xl text-cream mb-4 font-normal">Auténtica</h3>
-              <p className="text-cream/60 font-light text-sm leading-relaxed">
-                Su voz transmite con claridad lo que es: productos reales, con identidad y con historia.
-                La autenticidad está en dejar que el valor del producto hable por sí mismo.
-              </p>
-            </div>
-            <div className="border-l-2 pl-8" style={{ borderColor: '#fff0dc' }}>
-              <h3 className="font-serif text-xl text-cream mb-4 font-normal">Elegante</h3>
-              <p className="text-cream/60 font-light text-sm leading-relaxed">
-                Comunica con sobriedad y precisión. Está en la selección, en el detalle y en la
-                forma en que cada producto se presenta. Palabras con peso, sin redundancias.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── AUDIENCIA ────────────────────────────────────────────────── */}
-      <section className="max-w-screen-xl mx-auto px-8 md:px-20 py-24
-                          grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        {/* Stat visual */}
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            { num: 'Origen',       sub: 'Cuyo, Argentina'     },
-            { num: 'Criterio',     sub: 'En cada selección'   },
-            { num: 'Autenticidad', sub: 'Sin compromisos'      },
-            { num: 'Comunidad',    sub: 'De productores reales'},
-          ].map(({ num, sub }) => (
-            <div
-              key={num}
-              className="p-6 border border-cream-warm"
-            >
-              <p className="font-serif text-lg text-green-deep font-normal mb-1">{num}</p>
-              <p className="text-[11px] tracking-wide text-gray-400 font-light uppercase">{sub}</p>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <p className="section-label">Nuestra audiencia</p>
-          <h2 className="section-title mb-8">
-            Para quienes<br />
-            <em className="italic text-green-olive">eligen con conciencia</em>
-          </h2>
-          <p className="text-gray-600 font-light leading-[1.85] text-sm mb-6">
-            Personas que buscan diferenciar su consumo, conectando con propuestas auténticas
-            y con una historia detrás, priorizando lo real por sobre lo masivo.
-          </p>
-          <p className="text-gray-600 font-light leading-[1.85] text-sm">
-            Consumidores que entienden que detrás de cada producto hay un productor, una región
-            y una forma de hacer las cosas que vale la pena sostener.
-          </p>
-        </div>
-      </section>
-
-      {/* ── CTA FINAL ────────────────────────────────────────────────── */}
-      <section
-        className="py-20 text-center"
-        style={{ backgroundColor: '#8f2412' }}
-      >
-        <p className="text-[11px] tracking-[0.28em] uppercase text-orange font-light mb-4">
-          Explorá nuestra selección
-        </p>
-        <h2 className="font-serif text-4xl font-light text-cream mb-8">
-          Cada producto tiene<br />
-          <em className="italic" style={{ color: '#fff0dc' }}>una historia</em>
-        </h2>
-        <a href="/productos" className="btn-primary inline-block"
-           style={{ background: '#fff0dc', color: '#18532c' }}>
-          Ver productos
-        </a>
       </section>
 
     </div>
