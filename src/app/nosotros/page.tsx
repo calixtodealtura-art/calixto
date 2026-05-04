@@ -20,7 +20,7 @@ export default function NosotrosPage() {
         {/* Texto decorativo de fondo */}
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ backgroundColor: 'rgba(24, 83, 44, 0.78)' }}
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
         />
         <div
           className="absolute inset-0 flex items-center justify-center

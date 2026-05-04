@@ -58,10 +58,10 @@ export default async function HomePage() {
           className="object-cover object-center"
           priority
         />
-       {/* <div
+       <div
           className="absolute inset-0 pointer-events-none"
-          style={{ backgroundColor: 'rgba(24, 83, 44, 0.78)' }}
-        />*/}
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(237,131,43,0.08) 0%, transparent 60%)' }}
