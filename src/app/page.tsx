@@ -24,7 +24,7 @@ const STRIP_ITEMS = [
   'Productores reales',
   'Sin intermediarios',
   'Selección con criterio',
-  'San Juan · Argentina',
+  'Argentina',
   'Calidad sin compromisos',
 ]
 
@@ -73,7 +73,7 @@ export default async function HomePage() {
             className="text-[11px] tracking-[0.28em] uppercase font-light mb-6"
             style={{ color: '#ed832b' }}
           >
-            Cuyo · San Juan · Argentina
+            Cuyo · Argentina
           </p>
           <h1
             className="font-serif font-light leading-[1.05] mb-6"

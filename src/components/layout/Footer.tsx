@@ -64,7 +64,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Calixto — Sabores de altura. Todos los derechos reservados.
           </p>
           <p className="text-[11px] text-cream/30 font-light">
-            San Juan, Argentina
+            Cuyo, Argentina
           </p>
         </div>
       </div>

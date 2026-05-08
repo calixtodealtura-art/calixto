@@ -123,7 +123,7 @@ service cloud.firestore {
   "stock":       50,
   "featured":    true,
   "volume":      "500ml",
-  "origin":      "San Juan, Argentina",
+  "origin":      "Cuyo, Argentina",
   "acidity":     "0,3%",
   "tags":        ["virgen extra", "mediterraneo"],
   "createdAt":   "2024-01-01T00:00:00Z"

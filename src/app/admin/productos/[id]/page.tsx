@@ -29,7 +29,7 @@ const EMPTY: Omit<Product, 'id' | 'createdAt'> = {
   stock:       0,
   featured:    false,
   volume:      '',
-  origin:      'San Juan, Argentina',
+  origin:      'Cuyo, Argentina',
   acidity:     '',
   tags:        [],
 }

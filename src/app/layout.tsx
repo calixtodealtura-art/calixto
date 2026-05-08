@@ -10,10 +10,10 @@ import './globals.css'
 export const metadata: Metadata = {
   title:       'Calixto — Origen & Sabor',
   description: 'Aceites de oliva virgen extra, varietales, acetos, aceitunas y salsas artesanales de los Andes sanjuaninos.',
-  keywords:    ['aceite de oliva', 'virgen extra', 'San Juan', 'gourmet', 'aceto', 'aceitunas'],
+  keywords:    ['aceite de oliva', 'virgen extra', 'Cuyo', 'gourmet', 'aceto', 'aceitunas'],
   openGraph: {
     title:       'Calixto — Origen & Sabor',
-    description: 'Productos gourmet de nuestros olivares de altura en San Juan, Argentina.',
+    description: 'Productos gourmet de nuestros olivares de altura en Cuyo, Argentina.',
     type:        'website',
   },
 }
