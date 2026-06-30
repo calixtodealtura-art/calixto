@@ -34,7 +34,7 @@ export default async function CombosPage() {
           className="text-[11px] tracking-[0.28em] uppercase font-light mb-4"
           style={{ color: '#ed832b' }}
         >
-          Ofertas especiales
+          Ofertas especiales imperdibles
         </p>
         <h1
           className="font-serif font-light leading-tight mb-4"
