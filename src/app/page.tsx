@@ -10,13 +10,13 @@ const CATEGORY_CONFIG: {
   label:    string
   sublabel: string
   bg:       string
-  image: string
+  image:    string
 }[] = [
-  { slug: 'aceites',    label: 'Aceites de Oliva',   sublabel: 'Virgen extra · Primera prensada', bg: 'from-green-mid to-green-olive', image: '/imagenes/aceite.png' },
-  { slug: 'varietales', label: 'Varietales',          sublabel: 'Monovarietales seleccionados',    bg: 'from-[#1a4a28] to-[#3d6b35]' , image: '/imagenes/aceite.png' },
-  { slug: 'acetos',     label: 'Acetos',              sublabel: 'Añejados artesanalmente',         bg: 'from-[#5a1a0a] to-[#8f2412]' , image: '/imagenes/aceite.png'  },
-  { slug: 'aceitunas',  label: 'Aceitunas',           sublabel: 'Marinadas y al natural',          bg: 'from-green-deep to-green-mid' , image: '/imagenes/aceituna.png'  },
-  { slug: 'especiales', label: 'Especiales Gourmet',  sublabel: 'Con base de aceite de oliva',     bg: 'from-[#4a2800] to-[#8b5e3c]' , image: '/imagenes/especiales.png'  },
+  { slug: 'aceites',    label: 'Aceites de Oliva',  sublabel: 'Virgen extra · Primera prensada', bg: 'from-green-mid to-green-olive', image: '/imagenes/aceite.png'     },
+  { slug: 'varietales', label: 'Varietales',         sublabel: 'Monovarietales seleccionados',    bg: 'from-[#1a4a28] to-[#3d6b35]',  image: '/imagenes/aceite.png'     },
+  { slug: 'acetos',     label: 'Acetos',             sublabel: 'Añejados artesanalmente',         bg: 'from-[#5a1a0a] to-[#8f2412]',  image: '/imagenes/aceite.png'     },
+  { slug: 'aceitunas',  label: 'Aceitunas',          sublabel: 'Marinadas y al natural',          bg: 'from-green-deep to-green-mid',  image: '/imagenes/aceituna.png'   },
+  { slug: 'especiales', label: 'Especiales Gourmet', sublabel: 'Con base de aceite de oliva',     bg: 'from-[#4a2800] to-[#8b5e3c]',  image: '/imagenes/especiales.png' },
 ]
 
 const STRIP_ITEMS = [
@@ -29,19 +29,22 @@ const STRIP_ITEMS = [
 ]
 
 export default async function HomePage() {
-  // Traemos todos los productos y los destacados en paralelo
   const [allProducts, featured] = await Promise.all([
     getProducts().catch(() => []),
     getProducts({ featured: true, limitN: 8 }).catch(() => []),
   ])
 
-  // Contamos los productos por categoría desde los datos reales
   const countByCategory = allProducts.reduce<Record<string, number>>(
     (acc, product) => {
       acc[product.category] = (acc[product.category] ?? 0) + 1
       return acc
     },
     {}
+  )
+
+  // Solo las categorías que tienen al menos 1 producto
+  const activeCategories = CATEGORY_CONFIG.filter(
+    cat => (countByCategory[cat.slug] ?? 0) > 0
   )
 
   return (
@@ -58,7 +61,7 @@ export default async function HomePage() {
           className="object-cover object-center"
           priority
         />
-       <div
+        <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
         />
@@ -81,7 +84,7 @@ export default async function HomePage() {
           >
             Productos<br />
             regionales<br />
-            con <em className='not-italic text-gold-light' >identidad</em>
+            con <em className="not-italic text-gold-light">identidad</em>
           </h1>
           <p
             className="font-light text-base leading-relaxed max-w-md mb-10"
@@ -134,71 +137,66 @@ export default async function HomePage() {
       </div>
 
       {/* ── CATEGORÍAS ────────────────────────────────────────────────── */}
-      <section className="px-8 md:px-20 py-20 bg-ivory">
-        <div className="flex items-end justify-between mb-12">
-          <div>
-            <p className="section-label">Nuestra selección</p>
-            <h2 className="section-title">
-              Productos con<br />
-              <em className="not-italic text-gold-light">origen y criterio</em>
-            </h2>
+      {activeCategories.length > 0 && (
+        <section className="px-8 md:px-20 py-20 bg-ivory">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <p className="section-label">Nuestra selección</p>
+              <h2 className="section-title">
+                Productos con<br />
+                <em className="not-italic text-gold-light">origen y criterio</em>
+              </h2>
+            </div>
+            <Link href="/productos" className="btn-ghost hidden md:inline-block">
+              Ver todo →
+            </Link>
           </div>
-          <Link href="/productos" className="btn-ghost hidden md:inline-block">
-            Ver todo →
-          </Link>
-        </div>
-        {/* ── Cuadros de categorias ──────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {CATEGORY_CONFIG.map(cat => {
-            const count = countByCategory[cat.slug] ?? 0
 
-            return (
-              <Link
-                key={cat.slug}
-                href={`/productos?categoria=${cat.slug}`}
-                className="group relative aspect-[3/4] overflow-hidden"
-              >
-                {/* Imagen de fondo */}
-                <Image
-                  src={cat.image}
-                  alt={cat.label}
-                  fill
-                  className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                />
-
-                {/* Overlay oscuro */}
-                <div className="absolute inset-0 bg-black/40" />
-
-                {/* Gradiente encima */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)',
-                  }}
-                />
-
-                {/* Contenido */}
-                <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                  <p className="font-serif text-[1.2rem]" style={{ color: '#fff0dc' }}>
-                    {cat.label}
-                  </p>
-                  <p
-                    className="text-[10px] tracking-wider uppercase mt-1 font-light"
-                    style={{ color: 'rgba(255,240,220,0.65)' }}
-                  >
-                    {count === 0
-                      ? 'Próximamente'
-                      : `${count} ${count === 1 ? 'producto' : 'productos'}`}
-                  </p>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-
-
-      </section>
+          {/* Grilla adaptable según cantidad de categorías activas */}
+          <div className={`grid gap-5 ${
+            activeCategories.length === 1 ? 'grid-cols-1 max-w-sm mx-auto'         :
+            activeCategories.length === 2 ? 'grid-cols-2 max-w-xl mx-auto'         :
+            activeCategories.length === 3 ? 'grid-cols-3'                          :
+            activeCategories.length === 4 ? 'grid-cols-2 md:grid-cols-4'           :
+            'grid-cols-2 md:grid-cols-3 lg:grid-cols-5'
+          }`}>
+            {activeCategories.map(cat => {
+              const count = countByCategory[cat.slug] ?? 0
+              return (
+                <Link
+                  key={cat.slug}
+                  href={`/productos?categoria=${cat.slug}`}
+                  className="group relative aspect-[3/4] overflow-hidden"
+                >
+                  <Image
+                    src={cat.image}
+                    alt={cat.label}
+                    fill
+                    className="object-cover object-center transition-transform duration-500
+                               group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/40" />
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: 'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)' }}
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                    <p className="font-serif text-[1.2rem]" style={{ color: '#fff0dc' }}>
+                      {cat.label}
+                    </p>
+                    <p
+                      className="text-[10px] tracking-wider uppercase mt-1 font-light"
+                      style={{ color: 'rgba(255,240,220,0.65)' }}
+                    >
+                      {`${count} ${count === 1 ? 'producto' : 'productos'}`}
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ── PRODUCTOS DESTACADOS ──────────────────────────────────────── */}
       <section className="px-8 md:px-20 py-20" style={{ backgroundColor: '#fff0dc' }}>
@@ -256,7 +254,7 @@ export default async function HomePage() {
           >
             Una selección<br />
             con criterio.<br />
-            <em className="not-italic text-gold-light" >
+            <em className="not-italic text-gold-light">
               No con volumen.
             </em>
           </h2>
@@ -284,7 +282,7 @@ export default async function HomePage() {
           >
             {[
               { num: 'Cuyo',  lbl: 'Nuestra región'    },
-              { num: '100%',  lbl: 'Sin intermediarios'},
+              { num: '100%',  lbl: 'Sin intermediarios' },
             ].map(({ num, lbl }) => (
               <div key={lbl}>
                 <p
