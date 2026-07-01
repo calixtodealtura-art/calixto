@@ -16,7 +16,16 @@ const CATEGORIES: ProductCategory[] = [
   'aceites', 'varietales', 'acetos', 'aceitunas', 'especiales'
 ]
 
-const EMPTY: Omit<Product, 'id' | 'createdAt'> = {
+// Tipo del estado del formulario: igual que Product, pero price/stock/oldPrice
+// pueden valer '' temporalmente mientras el usuario edita el campo
+// (así evitamos que quede un 0 "pegado" al borrar el input).
+type FormState = Omit<Product, 'id' | 'createdAt' | 'price' | 'stock' | 'oldPrice'> & {
+  price:    number | ''
+  stock:    number | ''
+  oldPrice: number | '' | undefined
+}
+
+const EMPTY: FormState = {
   name:        '',
   slug:        '',
   category:    'aceites',
@@ -40,7 +49,7 @@ export default function ProductFormPage() {
   const id       = params.id as string
   const isNew    = id === 'nuevo'
 
-  const [form,      setForm]      = useState(EMPTY)
+  const [form,      setForm]      = useState<FormState>(EMPTY)
   const [loading,   setLoading]   = useState(!isNew)
   const [saving,    setSaving]    = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -87,12 +96,18 @@ export default function ProductFormPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) {
     const { name, value, type } = e.target
-    const val = type === 'checkbox'
-      ? (e.target as HTMLInputElement).checked
-      : type === 'number' ? Number(value) : value
+    // Para inputs numéricos: si el campo queda vacío, guardamos '' en vez de
+    // forzar un 0, así el estado realmente puede estar "vacío" y no se
+    // le queda pegado el cero cuando el usuario borra el contenido.
+    const val =
+      type === 'checkbox'
+        ? (e.target as HTMLInputElement).checked
+        : type === 'number'
+          ? (value === '' ? '' : Number(value))
+          : value
 
     setForm(prev => {
-      const updated = { ...prev, [name]: val }
+      const updated = { ...prev, [name]: val } as FormState
       if (name === 'name') updated.slug = slugify(value)
       return updated
     })
@@ -170,21 +185,33 @@ export default function ProductFormPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name || !form.price) {
+
+    // Normalizamos precio y stock a número por si quedaron en '' (vacío)
+    // mientras el usuario editaba el campo.
+    const price = Number(form.price) || 0
+    const stock = Number(form.stock) || 0
+    const oldPrice =
+      form.oldPrice === '' || form.oldPrice === undefined
+        ? undefined
+        : Number(form.oldPrice)
+
+    if (!form.name || !price) {
       toast.error('Nombre y precio son obligatorios')
       return
     }
 
     setSaving(true)
     try {
+      const payload = { ...form, price, stock, oldPrice }
+
       if (isNew) {
         await addDoc(collection(db, 'products'), {
-          ...form,
+          ...payload,
           createdAt: Timestamp.now(),
         })
         toast.success('Producto creado')
       } else {
-        await updateDoc(doc(db, 'products', id), { ...form })
+        await updateDoc(doc(db, 'products', id), payload)
         toast.success('Producto actualizado')
       }
       router.push('/admin/productos')
@@ -260,16 +287,20 @@ export default function ProductFormPage() {
         <div className="grid grid-cols-3 gap-4">
           <Field label="Precio *">
             <input name="price" type="number" min={0} required
-              value={form.price} onChange={handleChange} className={inputCls} />
+              value={form.price === 0 ? '' : form.price}
+              onChange={handleChange} className={inputCls}
+              placeholder="0" />
           </Field>
           <Field label="Precio anterior (tachado)">
             <input name="oldPrice" type="number" min={0}
-              value={form.oldPrice ?? ''}
+              value={form.oldPrice ? form.oldPrice : ''}
               onChange={handleChange} className={inputCls} />
           </Field>
           <Field label="Stock">
             <input name="stock" type="number" min={0}
-              value={form.stock} onChange={handleChange} className={inputCls} />
+              value={form.stock === 0 ? '' : form.stock}
+              onChange={handleChange} className={inputCls}
+              placeholder="0" />
           </Field>
         </div>
 
@@ -364,18 +395,18 @@ export default function ProductFormPage() {
           </p>
         </div>
 
-        {form.price > 0 && (
+        {Number(form.price) > 0 && (
           <div className="bg-cream p-4 border border-cream-warm">
             <p className="text-[10px] tracking-[0.2em] uppercase text-green-olive mb-1 font-light">
               Preview precio
             </p>
             <div className="flex items-baseline gap-2">
               <span className="font-serif text-2xl font-semibold text-green-deep">
-                {formatPrice(form.price)}
+                {formatPrice(Number(form.price))}
               </span>
               {form.oldPrice ? (
                 <span className="text-sm text-gray-400 line-through">
-                  {formatPrice(form.oldPrice)}
+                  {formatPrice(Number(form.oldPrice))}
                 </span>
               ) : null}
             </div>
