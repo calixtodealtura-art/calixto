@@ -9,7 +9,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title:       'Calixto — Origen & Sabor',
-  description: 'Aceites de oliva virgen extra, varietales, acetos, aceitunas y salsas artesanales de los Andes sanjuaninos.',
+  description: 'Aceites de oliva virgen extra, varietales, acetos, aceitunas y salsas artesanales de los Andes.',
   keywords:    ['aceite de oliva', 'virgen extra', 'Cuyo', 'gourmet', 'aceto', 'aceitunas'],
   openGraph: {
     title:       'Calixto — Origen & Sabor',
