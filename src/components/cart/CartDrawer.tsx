@@ -4,11 +4,11 @@ import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import Link  from 'next/link'
 import { useCartStore } from '@/store/cartStore'
+import { useShippingThreshold } from '@/lib/hooks/useShippingThreshold'
 import {
   formatPrice,
   shippingProgress,
   remainingForFreeShipping,
-  FREE_SHIPPING_THRESHOLD,
 } from '@/lib/utils'
 
 export default function CartDrawer() {
@@ -18,10 +18,12 @@ export default function CartDrawer() {
     total, itemCount,
   } = useCartStore()
 
+  const { threshold } = useShippingThreshold()
+
   const cartTotal  = total()
   const cartCount  = itemCount()
-  const progress   = shippingProgress(cartTotal)
-  const remaining  = remainingForFreeShipping(cartTotal)
+  const progress   = shippingProgress(cartTotal, threshold)
+  const remaining  = remainingForFreeShipping(cartTotal, threshold)
 
   return (
     <>

@@ -26,13 +26,13 @@ export function slugify(str: string): string {
     .replace(/\s+/g, '-')
 }
 
-/** Umbral de envío gratis */
+/** Umbral de envío gratis (valor por defecto/fallback) */
 export const FREE_SHIPPING_THRESHOLD = 120_000
 
-export function shippingProgress(total: number): number {
-  return Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100)
+export function shippingProgress(total: number, threshold: number = FREE_SHIPPING_THRESHOLD): number {
+  return Math.min((total / threshold) * 100, 100)
 }
 
-export function remainingForFreeShipping(total: number): number {
-  return Math.max(FREE_SHIPPING_THRESHOLD - total, 0)
+export function remainingForFreeShipping(total: number, threshold: number = FREE_SHIPPING_THRESHOLD): number {
+  return Math.max(threshold - total, 0)
 }

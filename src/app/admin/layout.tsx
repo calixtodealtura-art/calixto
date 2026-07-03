@@ -38,12 +38,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (pathname === '/admin/login') return <>{children}</>
 
   const NAV = [
-    { href: '/admin/ordenes',   label: 'Órdenes',   icon: ShoppingBag,   badge: null   },
-    { href: '/admin/productos', label: 'Productos',  icon: Package,       badge: null   },
-    { href: '/admin/combos', label: 'Combos', icon: Package2, badge: null },
-    { href: '/admin/stock',     label: 'Stock',      icon: BarChart2,     badge: null   },
-    { href: '/admin/mensajes',  label: 'Mensajes',   icon: MessageSquare, badge: unread },
-  ]
+  { href: '/admin/ordenes',   label: 'Órdenes',   icon: ShoppingBag,   badge: null   },
+  { href: '/admin/productos', label: 'Productos',  icon: Package,       badge: null   },
+  { href: '/admin/combos',    label: 'Combos',     icon: Package2,      badge: null   },
+  { href: '/admin/stock',     label: 'Stock',      icon: BarChart2,     badge: null   },
+  { href: '/admin/envios',    label: 'Envíos',     icon: Truck,         badge: null   }, // 👈 nuevo
+  { href: '/admin/mensajes',  label: 'Mensajes',   icon: MessageSquare, badge: unread },
+]
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] flex">

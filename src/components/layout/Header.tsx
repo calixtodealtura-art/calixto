@@ -5,7 +5,8 @@ import { User, ShoppingBag, Menu, X } from 'lucide-react'
 import { useState, useEffect }        from 'react'
 import { useCartStore }    from '@/store/cartStore'
 import { useAuthStore }    from '@/store/authStore'
-import { cn }              from '@/lib/utils'
+import { useShippingThreshold } from '@/lib/hooks/useShippingThreshold'
+import { cn, formatPrice } from '@/lib/utils'
 import CalixtIcon          from '@/components/ui/CalixtIcon'
 import DynamicNav          from '@/components/layout/DynamicNav'
 import type { ProductCategory } from '@/types'
@@ -27,12 +28,13 @@ export default function Header() {
 
   const openCart = useCartStore(s => s.openCart)
   const { user } = useAuthStore()
+  const { threshold } = useShippingThreshold()
 
   return (
     <>
       {/* Announcement bar */}
       <div className="bg-green-deep text-cream text-[11px] tracking-[0.18em] uppercase text-center py-2.5 px-4 font-light">
-        Envío gratis a CABA y GBA · Resto del país a partir de $200.000
+        Envío gratis a CABA y GBA a partir de {formatPrice(threshold)} - Consultar envío para otros lugares.
       </div>
 
       <header className="sticky top-0 z-50 bg-ivory border-b border-cream-warm">
