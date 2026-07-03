@@ -1,7 +1,7 @@
 import { notFound }          from 'next/navigation'
-import Image                  from 'next/image'
 import { getProductBySlug }   from '@/lib/firestore'
 import AddToCartButton        from '@/components/product/AddToCartButton'
+import ProductGallery         from '@/components/product/ProductGallery'
 import { formatPrice }        from '@/lib/utils'
 
 interface Props {
@@ -20,22 +20,7 @@ export default async function ProductPage({ params }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
 
           {/* Images */}
-          <div className="relative aspect-[4/5] bg-cream overflow-hidden">
-            {product.images?.[0] ? (
-              <Image
-                src={product.images[0]}
-                alt={product.name}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-[12rem]
-                              bg-gradient-to-br from-cream to-cream-warm">
-                🫒
-              </div>
-            )}
-          </div>
+          <ProductGallery images={product.images ?? []} productName={product.name} />
 
           {/* Info */}
           <div className="pt-4">
