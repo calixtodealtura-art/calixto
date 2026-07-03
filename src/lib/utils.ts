@@ -27,7 +27,7 @@ export function slugify(str: string): string {
 }
 
 /** Umbral de envío gratis (valor por defecto/fallback) */
-export const FREE_SHIPPING_THRESHOLD = 120_000
+export const FREE_SHIPPING_THRESHOLD = 0
 
 export function shippingProgress(total: number, threshold: number = FREE_SHIPPING_THRESHOLD): number {
   return Math.min((total / threshold) * 100, 100)
