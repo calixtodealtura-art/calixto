@@ -100,10 +100,6 @@ export default async function ProductPage({ params }: Props) {
             </p>
 
             <AddToCartButton product={product} />
-
-            <p className="text-[11px] text-gray-400 font-light mt-4 tracking-wide">
-              Envío gratis a CABA y GBA · Todo el país a partir de $120.000
-            </p>
           </div>
         </div>
       </div>
