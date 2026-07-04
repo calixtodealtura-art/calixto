@@ -7,6 +7,8 @@ import { collection, getDocs,
 import { db }                    from '@/lib/firebase'
 import { formatPrice }           from '@/lib/utils'
 import toast                     from 'react-hot-toast'
+import { Store, Truck, MapPin }  from 'lucide-react'
+import { DELIVERY_METHOD_LABELS } from '@/types'
 import type { Order, OrderStatus } from '@/types'
 
 const STATUS_STYLES: Record<string, string> = {
@@ -23,6 +25,12 @@ const STATUS_STYLES: Record<string, string> = {
 const STATUS_OPTIONS: OrderStatus[] = [
   'pendiente', 'confirmado', 'enviado', 'entregado'
 ]
+
+const DELIVERY_ICONS = {
+  retiro:         Store,
+  envio_caba_gba: Truck,
+  envio_interior: MapPin,
+}
 
 export default function OrdenesPage() {
   const [orders,  setOrders]  = useState<Order[]>([])
@@ -85,12 +93,18 @@ export default function OrdenesPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {orders.map(order => (
-            <div key={order.id} className="bg-white border border-cream-warm">
+          {orders.map(order => {
+            const DeliveryIcon = order.deliveryMethod ? DELIVERY_ICONS[order.deliveryMethod] : null
+
+            return (
+            <div
+              key={order.id}
+              className={`bg-white border ${order.shippingPending ? 'border-orange' : 'border-cream-warm'}`}
+            >
 
               {/* Row */}
               <div
-                className="grid grid-cols-[1fr_160px_120px_160px_40px] items-center
+                className="grid grid-cols-[1fr_140px_160px_120px_160px_40px] items-center
                            px-5 py-4 cursor-pointer hover:bg-cream/40 transition-colors gap-4"
                 onClick={() => setExpanded(expanded === order.id ? null : order.id)}
               >
@@ -109,9 +123,25 @@ export default function OrdenesPage() {
                   </p>
                 </div>
 
+                {/* Entrega */}
+                <div className="flex items-center gap-1.5 text-[11px] text-green-deep font-light">
+                  {DeliveryIcon && <DeliveryIcon size={13} strokeWidth={1.5} />}
+                  <span className="truncate">
+                    {order.deliveryMethod ? DELIVERY_METHOD_LABELS[order.deliveryMethod] : '—'}
+                  </span>
+                  {order.shippingPending && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full
+                                     bg-orange text-white shrink-0">
+                      Coordinar
+                    </span>
+                  )}
+                </div>
+
                 {/* Cliente */}
                 <div className="text-sm text-green-deep font-light truncate">
-                  {order.shippingAddress?.fullName ?? '—'}
+                  {order.shippingAddress?.fullName
+                    ?? order.pickupContact?.fullName
+                    ?? '—'}
                 </div>
 
                 {/* Total */}
@@ -162,14 +192,33 @@ export default function OrdenesPage() {
                         </li>
                       ))}
                     </ul>
+
+                    {order.shippingCost > 0 && (
+                      <p className="text-[11px] text-gray-400 font-light mt-3">
+                        Envío: {formatPrice(order.shippingCost)}
+                      </p>
+                    )}
+                    {order.shippingPending && (
+                      <p className="text-[11px] text-orange font-medium mt-3">
+                        ⚠ Envío al interior — coordinar costo con el cliente
+                      </p>
+                    )}
                   </div>
 
-                  {/* Datos de envío */}
+                  {/* Datos de entrega */}
                   <div>
                     <p className="text-[10px] tracking-[0.2em] uppercase text-green-olive mb-3 font-medium">
-                      Datos de envío
+                      {order.deliveryMethod === 'retiro' ? 'Datos de contacto' : 'Datos de envío'}
                     </p>
-                    {order.shippingAddress && (
+
+                    {order.deliveryMethod === 'retiro' && order.pickupContact && (
+                      <address className="not-italic text-sm text-green-deep font-light space-y-1">
+                        <p className="font-medium">{order.pickupContact.fullName}</p>
+                        <p>{order.pickupContact.phone}</p>
+                      </address>
+                    )}
+
+                    {order.deliveryMethod !== 'retiro' && order.shippingAddress && (
                       <address className="not-italic text-sm text-green-deep font-light space-y-1">
                         <p className="font-medium">{order.shippingAddress.fullName}</p>
                         <p>{order.shippingAddress.address}</p>
@@ -181,7 +230,7 @@ export default function OrdenesPage() {
                 </div>
               )}
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

@@ -1,27 +1,31 @@
 import { NextRequest, NextResponse }     from 'next/server'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
-import { collection, addDoc, Timestamp } from 'firebase/firestore'
+import { collection, addDoc, doc, getDoc, Timestamp } from 'firebase/firestore'
 import { db }                             from '@/lib/firebase'
-import type { CartItem, ShippingAddress } from '@/types'
+import type { CartItem, ShippingAddress, PickupContact, DeliveryMethod } from '@/types'
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
 })
 
-const FREE_SHIPPING_THRESHOLD = 120_000
+// Fallbacks solo por si no existe el documento de configuración en Firestore
+const FALLBACK_FREE_SHIPPING_THRESHOLD = 120_000
+const FALLBACK_SHIPPING_COST            = 1_500
 
 export async function POST(req: NextRequest) {
   try {
     const {
       items,
+      deliveryMethod,
       shippingAddress,
-      total,
+      pickupContact,
       userId,
     }: {
-      items:           CartItem[]
-      shippingAddress: ShippingAddress
-      total:           number
-      userId:          string
+      items:            CartItem[]
+      deliveryMethod:   DeliveryMethod
+      shippingAddress?: ShippingAddress
+      pickupContact?:   PickupContact
+      userId:           string
     } = await req.json()
 
     if (!items || items.length === 0) {
@@ -31,16 +35,62 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (!deliveryMethod) {
+      return NextResponse.json(
+        { error: 'Falta indicar el método de entrega' },
+        { status: 400 }
+      )
+    }
+
+    if (deliveryMethod === 'retiro' && !pickupContact) {
+      return NextResponse.json(
+        { error: 'Faltan datos de contacto para el retiro' },
+        { status: 400 }
+      )
+    }
+
+    if (deliveryMethod !== 'retiro' && !shippingAddress) {
+      return NextResponse.json(
+        { error: 'Faltan datos de envío' },
+        { status: 400 }
+      )
+    }
+
     const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-    console.log('BASE_URL:', BASE_URL)
-
-    // ── Calcular costo de envío ────────────────────────────────────
+    // ── Subtotal (siempre recalculado en el servidor) ──────────────
     const subtotal = items.reduce(
       (sum, i) => sum + i.product.price * i.quantity,
       0
     )
-    const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 1500
+
+    // ── Leer configuración de envío desde Firestore ────────────────
+    const settingsSnap = await getDoc(doc(db, 'settings', 'shipping'))
+    const settingsData = settingsSnap.exists() ? settingsSnap.data() : {}
+
+    const freeShippingThreshold =
+      typeof settingsData.freeShippingMinimum === 'number'
+        ? settingsData.freeShippingMinimum
+        : FALLBACK_FREE_SHIPPING_THRESHOLD
+
+    const configuredShippingCost =
+      typeof settingsData.shippingCost === 'number'
+        ? settingsData.shippingCost
+        : FALLBACK_SHIPPING_COST
+
+    // ── Calcular costo de envío según método (nunca se confía en el cliente) ──
+    let shipping = 0
+    let shippingPending = false
+
+    if (deliveryMethod === 'envio_caba_gba') {
+      shipping = subtotal >= freeShippingThreshold ? 0 : configuredShippingCost
+    } else if (deliveryMethod === 'envio_interior') {
+      shipping = 0
+      shippingPending = true
+    }
+    // deliveryMethod === 'retiro' → shipping queda en 0
+
+    const total = subtotal + shipping
 
     // ── Crear orden en Firestore ───────────────────────────────────
     const orderRef = await addDoc(collection(db, 'orders'), {
@@ -52,7 +102,11 @@ export async function POST(req: NextRequest) {
         quantity:    i.quantity,
         image:       i.product.images?.[0] ?? '',
       })),
-      shippingAddress,
+      deliveryMethod,
+      ...(deliveryMethod !== 'retiro' && shippingAddress ? { shippingAddress } : {}),
+      ...(deliveryMethod === 'retiro' && pickupContact ? { pickupContact } : {}),
+      shippingCost:    shipping,
+      shippingPending,
       total,
       status:    'pendiente',
       createdAt: Timestamp.now(),
@@ -77,7 +131,7 @@ export async function POST(req: NextRequest) {
       description: product.shortDesc || product.name,
     }))
 
-    // Agregar envío como item solo si corresponde
+    // Agregar envío como item solo si corresponde cobrarlo ahora
     if (shipping > 0) {
       mpItems.push({
         id:          'envio',
@@ -91,8 +145,6 @@ export async function POST(req: NextRequest) {
 
     // ── Crear preferencia en Mercado Pago ──────────────────────────
     const preference = new Preference(client)
-
-    console.log('Creando preferencia MP...')
 
     const result = await preference.create({
       body: {
@@ -109,8 +161,6 @@ export async function POST(req: NextRequest) {
         ).toISOString(),
       },
     })
-
-    console.log('Preferencia creada:', result.id)
 
     return NextResponse.json({
       preferenceId: result.id,

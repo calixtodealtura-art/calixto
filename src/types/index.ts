@@ -63,6 +63,18 @@ export interface UserProfile {
   createdAt:   Date
 }
 
+// ── Envío / Entrega ────────────────────────────────────────────────────────
+export type DeliveryMethod =
+  | 'retiro'          // retiro en el local
+  | 'envio_caba_gba'  // envío calculado automáticamente
+  | 'envio_interior'  // envío a coordinar/cobrar aparte
+
+export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
+  retiro:          'Retiro en el local',
+  envio_caba_gba:  'Envío a CABA / GBA',
+  envio_interior:  'Envío al interior',
+}
+
 // ── Orden ──────────────────────────────────────────────────────────────────
 export type OrderStatus = 'pendiente' | 'confirmado' | 'enviado' | 'entregado'
 
@@ -83,15 +95,25 @@ export interface ShippingAddress {
   phone:     string
 }
 
+/** Datos mínimos para coordinar el retiro en el local (sin dirección) */
+export interface PickupContact {
+  fullName: string
+  phone:    string
+}
+
 export interface Order {
-  id:              string
-  userId:          string
-  items:           OrderItem[]
-  shippingAddress: ShippingAddress
-  total:           number
-  status:          OrderStatus
-  createdAt:       Date
-    paymentId?:     string
+  id:               string
+  userId:           string
+  items:            OrderItem[]
+  deliveryMethod:   DeliveryMethod
+  shippingAddress?: ShippingAddress   // presente solo si deliveryMethod !== 'retiro'
+  pickupContact?:   PickupContact     // presente solo si deliveryMethod === 'retiro'
+  shippingCost:     number            // 0 para retiro y envío al interior (se cobra aparte)
+  shippingPending:  boolean           // true solo si deliveryMethod === 'envio_interior'
+  total:            number
+  status:           OrderStatus
+  createdAt:        Date
+  paymentId?:     string
   paymentStatus?: string
   paymentMethod?: string
   paidAt?:        Date | null

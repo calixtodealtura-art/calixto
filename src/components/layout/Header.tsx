@@ -5,7 +5,7 @@ import { User, ShoppingBag, Menu, X } from 'lucide-react'
 import { useState, useEffect }        from 'react'
 import { useCartStore }    from '@/store/cartStore'
 import { useAuthStore }    from '@/store/authStore'
-import { useShippingThreshold } from '@/lib/hooks/useShippingThreshold'
+import { useShippingConfig } from '@/lib/hooks/useShippingConfig'
 import { cn, formatPrice } from '@/lib/utils'
 import CalixtIcon          from '@/components/ui/CalixtIcon'
 import DynamicNav          from '@/components/layout/DynamicNav'
@@ -28,7 +28,7 @@ export default function Header() {
 
   const openCart = useCartStore(s => s.openCart)
   const { user } = useAuthStore()
-  const { threshold } = useShippingThreshold()
+  const { threshold } = useShippingConfig()
 
   return (
     <>

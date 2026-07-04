@@ -4,7 +4,7 @@ import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import Link  from 'next/link'
 import { useCartStore } from '@/store/cartStore'
-import { useShippingThreshold } from '@/lib/hooks/useShippingThreshold'
+import { useShippingConfig } from '@/lib/hooks/useShippingConfig'
 import {
   formatPrice,
   shippingProgress,
@@ -18,7 +18,7 @@ export default function CartDrawer() {
     total, itemCount,
   } = useCartStore()
 
-  const { threshold } = useShippingThreshold()
+  const { threshold } = useShippingConfig()
 
   const cartTotal  = total()
   const cartCount  = itemCount()

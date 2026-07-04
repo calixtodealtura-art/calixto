@@ -4,9 +4,12 @@ import { useState }                from 'react'
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react'
 import { useCartStore }            from '@/store/cartStore'
 import { useAuthStore }            from '@/store/authStore'
+import { useShippingConfig }       from '@/lib/hooks/useShippingConfig'
 import { formatPrice, remainingForFreeShipping } from '@/lib/utils'
 import toast                       from 'react-hot-toast'
-import type { ShippingAddress, CartItem } from '@/types'
+import { Store, Truck, MapPin }    from 'lucide-react'
+import type { ShippingAddress, PickupContact, CartItem, DeliveryMethod } from '@/types'
+import { DELIVERY_METHOD_LABELS }  from '@/types'
 
 initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY!, {
   locale: 'es-AR',
@@ -17,7 +20,11 @@ const EMPTY_ADDRESS: ShippingAddress = {
   province: '', zipCode: '', phone: '',
 }
 
-const FIELDS = [
+const EMPTY_PICKUP: PickupContact = {
+  fullName: '', phone: '',
+}
+
+const ADDRESS_FIELDS = [
   { name: 'fullName', label: 'Nombre completo', type: 'text' },
   { name: 'address',  label: 'Dirección',        type: 'text' },
   { name: 'city',     label: 'Ciudad',            type: 'text' },
@@ -26,38 +33,88 @@ const FIELDS = [
   { name: 'phone',    label: 'Teléfono',          type: 'tel'  },
 ]
 
+const PICKUP_FIELDS = [
+  { name: 'fullName', label: 'Nombre completo', type: 'text' },
+  { name: 'phone',    label: 'Teléfono',          type: 'tel'  },
+]
+
+type Step = 'method' | 'form' | 'payment'
+
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCartStore()
   const { user }                    = useAuthStore()
+  const {
+    threshold, shippingCost,
+    pickupAddress, pickupHours,
+    interiorContactMessage, interiorContactLink,
+  } = useShippingConfig()
 
-  const [address,      setAddress]      = useState<ShippingAddress>(EMPTY_ADDRESS)
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod | null>(null)
+  const [address, setAddress] = useState<ShippingAddress>(EMPTY_ADDRESS)
+  const [pickup,  setPickup]  = useState<PickupContact>(EMPTY_PICKUP)
+
   const [preferenceId, setPreferenceId] = useState<string | null>(null)
   const [loading,      setLoading]      = useState(false)
-  const [step,         setStep]         = useState<'form' | 'payment'>('form')
+  const [step,         setStep]         = useState<Step>('method')
 
   // ── Snapshot del pedido (se guarda antes de limpiar el carrito) ──
-  const [orderItems, setOrderItems] = useState<CartItem[]>([])
-  const [orderTotal, setOrderTotal] = useState(0)
+  const [orderItems, setOrderItems]       = useState<CartItem[]>([])
+  const [orderTotal, setOrderTotal]       = useState(0)
+  const [orderShipping, setOrderShipping] = useState(0)
+  const [orderMethod, setOrderMethod]     = useState<DeliveryMethod | null>(null)
 
-  const cartTotal = total()
-  const shipping  = remainingForFreeShipping(cartTotal) === 0 ? 0 : 1500
+  const cartTotal   = total()
+  const configReady = threshold !== null && shippingCost !== null
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // Costo de envío según el método elegido
+  const shipping =
+    deliveryMethod === 'envio_caba_gba' && configReady
+      ? (remainingForFreeShipping(cartTotal, threshold!) === 0 ? 0 : shippingCost!)
+      : 0 // retiro e interior no se cobran online
+
+  const isInterior = deliveryMethod === 'envio_interior'
+  const isPickup    = deliveryMethod === 'retiro'
+  const needsAddressForm = deliveryMethod === 'envio_caba_gba' || deliveryMethod === 'envio_interior'
+
+  function handleAddressChange(e: React.ChangeEvent<HTMLInputElement>) {
     setAddress(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  function handlePickupChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setPickup(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  function handleSelectMethod(method: DeliveryMethod) {
+    setDeliveryMethod(method)
+    setStep('form')
   }
 
   async function handleConfirm(e: React.FormEvent) {
     e.preventDefault()
+
+    if (!deliveryMethod) return
+
+    if (deliveryMethod === 'envio_caba_gba' && !configReady) {
+      toast.error('Un momento, todavía estamos calculando el envío…')
+      return
+    }
+
     setLoading(true)
 
     try {
+      const finalTotal = cartTotal + shipping
+
       const res = await fetch('/api/crear-preferencia', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items,
-          shippingAddress: address,
-          total:           cartTotal + shipping,
+          deliveryMethod,
+          shippingAddress: needsAddressForm ? address : undefined,
+          pickupContact:   isPickup ? pickup : undefined,
+          shippingCost:    shipping,
+          shippingPending: isInterior,
+          total:           finalTotal,
           userId:          user?.uid ?? 'guest',
         }),
       })
@@ -68,7 +125,9 @@ export default function CheckoutPage() {
 
       // Guardá snapshot ANTES de limpiar el carrito
       setOrderItems([...items])
-      setOrderTotal(cartTotal + shipping)
+      setOrderTotal(finalTotal)
+      setOrderShipping(shipping)
+      setOrderMethod(deliveryMethod)
 
       setPreferenceId(prefId)
       setStep('payment')
@@ -82,11 +141,13 @@ export default function CheckoutPage() {
     }
   }
 
-  // Items a mostrar: snapshot si ya pagamos, carrito si todavía no
-  const displayItems = step === 'payment' ? orderItems : items
-  const displayTotal = step === 'payment' ? orderTotal : cartTotal + shipping
+  // Items/valores a mostrar: snapshot si ya pagamos, carrito si todavía no
+  const displayItems    = step === 'payment' ? orderItems : items
+  const displayTotal    = step === 'payment' ? orderTotal : cartTotal + shipping
+  const displayShipping = step === 'payment' ? orderShipping : shipping
+  const displayMethod   = step === 'payment' ? orderMethod : deliveryMethod
 
-  if (items.length === 0 && step === 'form') {
+  if (items.length === 0 && step !== 'payment') {
     return (
       <div className="min-h-screen bg-ivory flex items-center justify-center">
         <div className="text-center">
@@ -103,71 +164,150 @@ export default function CheckoutPage() {
 
         <p className="section-label">Finalizar compra</p>
         <h1 className="section-title mb-12">
-          {step === 'form'
-            ? <>Datos de <em className="italic text-green-olive">envío</em></>
-            : <>Elegí cómo <em className="italic text-green-olive">pagar</em></>
-          }
+          {step === 'method'  && <>¿Cómo querés <em className="italic text-green-olive">recibirlo</em>?</>}
+          {step === 'form'    && <>Datos de <em className="italic text-green-olive">entrega</em></>}
+          {step === 'payment' && <>Elegí cómo <em className="italic text-green-olive">pagar</em></>}
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16 items-start">
 
-          {/* ── Formulario / Botón MP ── */}
+          {/* ── Columna principal ── */}
           <div>
-            {step === 'form' ? (
+
+            {/* Paso 0: método de entrega */}
+            {step === 'method' && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button
+                  onClick={() => handleSelectMethod('retiro')}
+                  className="border border-cream-warm bg-white p-6 text-left hover:border-orange transition-colors flex flex-col gap-3"
+                >
+                  <Store size={22} strokeWidth={1.5} className="text-green-deep" />
+                  <span className="font-serif text-base text-green-deep">Retiro en el local</span>
+                  <span className="text-[11px] text-gray-400 font-light">Sin costo</span>
+                </button>
+
+                <button
+                  onClick={() => handleSelectMethod('envio_caba_gba')}
+                  className="border border-cream-warm bg-white p-6 text-left hover:border-orange transition-colors flex flex-col gap-3"
+                >
+                  <Truck size={22} strokeWidth={1.5} className="text-green-deep" />
+                  <span className="font-serif text-base text-green-deep">Envío a CABA / GBA</span>
+                  <span className="text-[11px] text-gray-400 font-light">Costo calculado automáticamente</span>
+                </button>
+
+                <button
+                  onClick={() => handleSelectMethod('envio_interior')}
+                  className="border border-cream-warm bg-white p-6 text-left hover:border-orange transition-colors flex flex-col gap-3"
+                >
+                  <MapPin size={22} strokeWidth={1.5} className="text-green-deep" />
+                  <span className="font-serif text-base text-green-deep">Envío al interior</span>
+                  <span className="text-[11px] text-gray-400 font-light">A coordinar</span>
+                </button>
+              </div>
+            )}
+
+            {/* Paso 1: formulario */}
+            {step === 'form' && deliveryMethod && (
               <form onSubmit={handleConfirm} className="space-y-5">
-                {FIELDS.map(field => (
-                  <div key={field.name}>
-                    <label className="block text-[11px] tracking-[0.15em] uppercase
-                                      text-green-olive mb-1.5 font-light">
-                      {field.label}
-                    </label>
-                    <input
-                      type={field.type}
-                      name={field.name}
-                      required
-                      value={(address as unknown as Record<string, string>)[field.name]}
-                      onChange={handleChange}
-                      className="w-full border border-cream-warm bg-white px-4 py-3
-                                 text-sm text-green-deep font-light
-                                 focus:outline-none focus:border-orange transition-colors"
-                    />
+
+                <button
+                  type="button"
+                  onClick={() => setStep('method')}
+                  className="text-[11px] tracking-[0.1em] uppercase text-green-olive hover:text-orange transition-colors mb-2"
+                >
+                  ← {DELIVERY_METHOD_LABELS[deliveryMethod]} · cambiar
+                </button>
+
+                {isPickup && (pickupAddress || pickupHours) && (
+                  <div className="bg-cream p-4 text-sm text-green-deep font-light space-y-1">
+                    {pickupAddress && (
+                      <p><strong className="font-medium">Dirección:</strong> {pickupAddress}</p>
+                    )}
+                    {pickupHours && (
+                      <p><strong className="font-medium">Horarios:</strong> {pickupHours}</p>
+                    )}
                   </div>
-                ))}
+                )}
+
+                {isInterior && (
+                  <div className="bg-cream p-4 text-sm text-green-deep font-light">
+                    <p className="mb-2">{interiorContactMessage}</p>
+                    {interiorContactLink ? (
+                      <a
+                        href={interiorContactLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-orange underline"
+                      >
+                        Contactar
+                      </a>
+                    ) : null}
+                  </div>
+                )}
+
+                {isPickup
+                  ? PICKUP_FIELDS.map(field => (
+                      <div key={field.name}>
+                        <label className="block text-[11px] tracking-[0.15em] uppercase text-green-olive mb-1.5 font-light">
+                          {field.label}
+                        </label>
+                        <input
+                          type={field.type}
+                          name={field.name}
+                          required
+                          value={(pickup as unknown as Record<string, string>)[field.name]}
+                          onChange={handlePickupChange}
+                          className="w-full border border-cream-warm bg-white px-4 py-3 text-sm text-green-deep font-light focus:outline-none focus:border-orange transition-colors"
+                        />
+                      </div>
+                    ))
+                  : ADDRESS_FIELDS.map(field => (
+                      <div key={field.name}>
+                        <label className="block text-[11px] tracking-[0.15em] uppercase text-green-olive mb-1.5 font-light">
+                          {field.label}
+                        </label>
+                        <input
+                          type={field.type}
+                          name={field.name}
+                          required
+                          value={(address as unknown as Record<string, string>)[field.name]}
+                          onChange={handleAddressChange}
+                          className="w-full border border-cream-warm bg-white px-4 py-3 text-sm text-green-deep font-light focus:outline-none focus:border-orange transition-colors"
+                        />
+                      </div>
+                    ))
+                }
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (deliveryMethod === 'envio_caba_gba' && !configReady)}
                   className="btn-primary w-full mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Procesando…' : 'Continuar al pago →'}
+                  {deliveryMethod === 'envio_caba_gba' && !configReady
+                    ? 'Calculando envío…'
+                    : loading ? 'Procesando…' : 'Continuar al pago →'}
                 </button>
               </form>
+            )}
 
-            ) : (
+            {/* Paso 2: pago */}
+            {step === 'payment' && (
               <div>
                 <p className="text-sm text-gray-500 font-light mb-6 leading-relaxed">
-                  Tu orden fue registrada. Hacé click en el botón para completar
-                  el pago con Mercado Pago.
+                  Tu orden fue registrada. Hacé click en el botón para completar el pago con Mercado Pago.
+                  {isInterior ? ' El costo de envío se coordina y cobra por separado.' : ''}
                 </p>
 
                 {preferenceId && (
                   <Wallet initialization={{ preferenceId }} />
                 )}
-
-                <button
-                  onClick={() => setStep('form')}
-                  className="btn-ghost mt-6 pl-0"
-                >
-                  ← Volver a datos de envío
-                </button>
               </div>
             )}
           </div>
 
           {/* ── Resumen ── */}
           <aside className="bg-cream p-8 sticky top-24">
-            <h2 className="font-serif text-xl font-light text-green-deep mb-6
-                           pb-4 border-b border-cream-warm">
+            <h2 className="font-serif text-xl font-light text-green-deep mb-6 pb-4 border-b border-cream-warm">
               Resumen
             </h2>
 
@@ -186,12 +326,26 @@ export default function CheckoutPage() {
             </ul>
 
             <div className="border-t border-cream-warm pt-5 space-y-2.5">
+              {displayMethod && (
+                <div className="flex justify-between text-[12px] text-gray-400 font-light">
+                  <span>Entrega</span>
+                  <span>{DELIVERY_METHOD_LABELS[displayMethod]}</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-[12px] text-gray-400 font-light">
                 <span>Envío</span>
                 <span>
-                  {shipping === 0 ? '🎉 Gratis' : formatPrice(shipping)}
+                  {displayMethod === 'envio_interior'
+                    ? 'A coordinar'
+                    : displayMethod === 'retiro'
+                    ? '$0'
+                    : (step === 'form' && !configReady)
+                    ? '—'
+                    : displayShipping === 0 ? '🎉 Gratis' : formatPrice(displayShipping)}
                 </span>
               </div>
+
               <div className="flex justify-between items-center">
                 <span className="text-[11px] tracking-[0.1em] uppercase text-green-olive">
                   Total
