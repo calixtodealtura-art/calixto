@@ -1,15 +1,18 @@
 'use client'
 
 import Link                from 'next/link'
-import { User, ShoppingBag, Menu, X } from 'lucide-react'
-import { useState, useEffect }        from 'react'
+import { useRouter }       from 'next/navigation'
+import { User, ShoppingBag, Menu, X, LogOut } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { useCartStore }    from '@/store/cartStore'
 import { useAuthStore }    from '@/store/authStore'
 import { useShippingConfig } from '@/lib/hooks/useShippingConfig'
+import { signOut }         from '@/lib/auth'
 import { cn, formatPrice } from '@/lib/utils'
 import CalixtIcon          from '@/components/ui/CalixtIcon'
 import DynamicNav          from '@/components/layout/DynamicNav'
 import type { ProductCategory } from '@/types'
+import toast from 'react-hot-toast'
 
 const ALL_CATEGORIES: { slug: ProductCategory; label: string }[] = [
   { slug: 'aceites',    label: 'Aceites'           },
@@ -20,7 +23,10 @@ const ALL_CATEGORIES: { slug: ProductCategory; label: string }[] = [
 ]
 
 export default function Header() {
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   const [cartCount, setCartCount] = useState(0)
   const itemCount = useCartStore(s => s.itemCount())
@@ -29,6 +35,28 @@ export default function Header() {
   const openCart = useCartStore(s => s.openCart)
   const { user, role } = useAuthStore()
   const { threshold } = useShippingConfig()
+
+  // Cerrar el menú de usuario al clickear afuera
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  async function handleLogout() {
+    try {
+      await signOut()
+      setUserMenuOpen(false)
+      toast.success('Sesión cerrada')
+      router.push('/')
+    } catch {
+      toast.error('No se pudo cerrar sesión')
+    }
+  }
 
   return (
     <>
@@ -69,21 +97,57 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
-            <Link
-              href={
-                !user ? '/cuenta'
-                : role === 'admin' ? '/admin'
-                : '/mis-pedidos'
-              }
-              aria-label={
-                !user ? 'Iniciar sesión'
-                : role === 'admin' ? 'Administración'
-                : 'Mis pedidos'
-              }
-              className="text-green-deep hover:text-orange transition-colors"
-            >
-              <User size={19} strokeWidth={1.5} />
-            </Link>
+
+            {/* Ícono de usuario */}
+            {!user ? (
+              <Link
+                href="/cuenta"
+                aria-label="Iniciar sesión"
+                className="text-green-deep hover:text-orange transition-colors"
+              >
+                <User size={19} strokeWidth={1.5} />
+              </Link>
+            ) : role === 'admin' ? (
+              <Link
+                href="/admin"
+                aria-label="Administración"
+                className="text-green-deep hover:text-orange transition-colors"
+              >
+                <User size={19} strokeWidth={1.5} />
+              </Link>
+            ) : (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(v => !v)}
+                  aria-label="Mi cuenta"
+                  className="text-green-deep hover:text-orange transition-colors"
+                >
+                  <User size={19} strokeWidth={1.5} />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-cream-warm shadow-lg z-50">
+                    <p className="px-4 py-3 text-[11px] text-gray-400 font-light truncate border-b border-cream-warm">
+                      {user.email}
+                    </p>
+                    <Link
+                      href="/mis-pedidos"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm text-green-deep hover:bg-cream transition-colors"
+                    >
+                      Mis pedidos
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-terra hover:bg-cream transition-colors text-left"
+                    >
+                      <LogOut size={14} strokeWidth={1.5} />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               onClick={openCart}
@@ -137,6 +201,17 @@ export default function Header() {
             >
               Nosotros
             </Link>
+
+            {/* Logout en mobile, si es cliente logueado */}
+            {user && role !== 'admin' && (
+              <button
+                onClick={() => { setMobileOpen(false); handleLogout() }}
+                className="text-[12px] tracking-[0.12em] uppercase text-terra
+                           py-3 font-light text-left"
+              >
+                Cerrar sesión
+              </button>
+            )}
           </nav>
         </div>
       </header>
