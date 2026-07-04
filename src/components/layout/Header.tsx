@@ -27,14 +27,17 @@ export default function Header() {
   useEffect(() => { setCartCount(itemCount) }, [itemCount])
 
   const openCart = useCartStore(s => s.openCart)
-  const { user } = useAuthStore()
+  const { user, role } = useAuthStore()
   const { threshold } = useShippingConfig()
 
   return (
     <>
       {/* Announcement bar */}
       <div className="bg-green-deep text-cream text-[11px] tracking-[0.18em] uppercase text-center py-2.5 px-4 font-light">
-        Envío gratis a CABA y GBA a partir de {formatPrice(threshold)} - Consultar envío para otros lugares.
+        {threshold !== null
+          ? <>Envío gratis a CABA y GBA a partir de {formatPrice(threshold)} - Consultar envío para otros lugares.</>
+          : <>&nbsp;</>
+        }
       </div>
 
       <header className="sticky top-0 z-50 bg-ivory border-b border-cream-warm">
@@ -67,8 +70,16 @@ export default function Header() {
           {/* Actions */}
           <div className="flex items-center gap-4">
             <Link
-              href="/admin"
-              aria-label="Administración"
+              href={
+                !user ? '/cuenta'
+                : role === 'admin' ? '/admin'
+                : '/mis-pedidos'
+              }
+              aria-label={
+                !user ? 'Iniciar sesión'
+                : role === 'admin' ? 'Administración'
+                : 'Mis pedidos'
+              }
               className="text-green-deep hover:text-orange transition-colors"
             >
               <User size={19} strokeWidth={1.5} />

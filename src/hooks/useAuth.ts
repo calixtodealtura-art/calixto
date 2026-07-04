@@ -1,19 +1,33 @@
 'use client'
 
 import { useEffect } from 'react'
-import { onAuthChange } from '@/lib/auth'
+import { onAuthChange, getUserProfile } from '@/lib/auth'
 import { useAuthStore } from '@/store/authStore'
 
 export function useAuth() {
-  const { user, loading, setUser, setLoading } = useAuthStore()
+  const { user, role, loading, setUser, setRole, setLoading } = useAuthStore()
 
   useEffect(() => {
-    const unsubscribe = onAuthChange(firebaseUser => {
+    const unsubscribe = onAuthChange(async firebaseUser => {
       setUser(firebaseUser)
-      setLoading(false)
+
+      if (!firebaseUser) {
+        setRole(null)
+        setLoading(false)
+        return
+      }
+
+      try {
+        const profile = await getUserProfile(firebaseUser.uid)
+        setRole(profile?.role === 'admin' ? 'admin' : 'customer')
+      } catch {
+        setRole('customer') // fallback seguro: nunca asumir admin si falla la consulta
+      } finally {
+        setLoading(false)
+      }
     })
     return unsubscribe
-  }, [setUser, setLoading])
+  }, [setUser, setRole, setLoading])
 
-  return { user, loading }
+  return { user, role, loading }
 }

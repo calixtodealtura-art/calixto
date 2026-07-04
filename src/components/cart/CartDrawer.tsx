@@ -22,8 +22,8 @@ export default function CartDrawer() {
 
   const cartTotal  = total()
   const cartCount  = itemCount()
-  const progress   = shippingProgress(cartTotal, threshold)
-  const remaining  = remainingForFreeShipping(cartTotal, threshold)
+  const progress   = threshold !== null ? shippingProgress(cartTotal, threshold) : 0
+  const remaining  = threshold !== null ? remainingForFreeShipping(cartTotal, threshold) : 0
 
   return (
     <>
@@ -147,19 +147,23 @@ export default function CartDrawer() {
         {items.length > 0 && (
           <div className="px-8 py-6 border-t border-cream-warm bg-white">
             {/* Shipping progress */}
-            <div className="mb-1 h-[3px] bg-cream-warm rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-olive to-gold transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-gray-400 font-light mb-5">
-              {remaining > 0 ? (
-                <>Agregá <strong className="text-green-olive">{formatPrice(remaining)}</strong> más para envío gratis</>
-              ) : (
-                <span className="text-green-olive font-medium">🎉 ¡Tenés envío gratis!</span>
-              )}
-            </p>
+            {threshold !== null && (
+              <>
+                <div className="mb-1 h-[3px] bg-cream-warm rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-olive to-gold transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-gray-400 font-light mb-5">
+                  {remaining > 0 ? (
+                    <>Agregá <strong className="text-green-olive">{formatPrice(remaining)}</strong> más para envío gratis</>
+                  ) : (
+                    <span className="text-green-olive font-medium">🎉 ¡Tenés envío gratis!</span>
+                  )}
+                </p>
+              </>
+            )}
 
             {/* Total */}
             <div className="flex items-center justify-between mb-5">
