@@ -2,8 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loginWithEmail, registerWithEmail, loginWithGoogle } from '@/lib/auth'
+import {
+  loginWithEmail, registerWithEmail, loginWithGoogle,
+  getUserProfile, setAdminSessionCookie,
+} from '@/lib/auth'
 import toast from 'react-hot-toast'
+import type { User } from 'firebase/auth'
 
 export default function CuentaPage() {
   const router = useRouter()
@@ -12,17 +16,28 @@ export default function CuentaPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Decide a dónde mandar al usuario según su rol, y setea la cookie admin si corresponde
+  async function redirectByRole(user: User) {
+    const profile = await getUserProfile(user.uid)
+
+    if (profile?.role === 'admin') {
+      await setAdminSessionCookie(user)
+      router.push('/admin')
+    } else {
+      router.push('/mis-pedidos')
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     try {
-      if (mode === 'login') {
-        await loginWithEmail(email, password)
-      } else {
-        await registerWithEmail(email, password)
-      }
+      const user = mode === 'login'
+        ? await loginWithEmail(email, password)
+        : await registerWithEmail(email, password)
+
       toast.success(mode === 'login' ? 'Bienvenido de nuevo' : 'Cuenta creada')
-      router.push('/mis-pedidos')
+      await redirectByRole(user)
     } catch (err: any) {
       const message =
         err?.code === 'auth/invalid-credential' ? 'Email o contraseña incorrectos' :
@@ -38,9 +53,9 @@ export default function CuentaPage() {
   async function handleGoogle() {
     setLoading(true)
     try {
-      await loginWithGoogle()
+      const user = await loginWithGoogle()
       toast.success('Bienvenido')
-      router.push('/mis-pedidos')
+      await redirectByRole(user)
     } catch {
       toast.error('No se pudo iniciar sesión con Google')
     } finally {

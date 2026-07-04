@@ -3,8 +3,8 @@
 import { useState }              from 'react'
 import { useRouter }             from 'next/navigation'
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
-import { doc, getDoc, setDoc }   from 'firebase/firestore'
-import { auth, db }              from '@/lib/firebase'
+import { auth }                  from '@/lib/firebase'
+import { getUserProfile, setAdminSessionCookie } from '@/lib/auth'
 import toast                     from 'react-hot-toast'
 
 const googleProvider = new GoogleAuthProvider()
@@ -20,19 +20,17 @@ export default function AdminLoginPage() {
       const { user } = await signInWithPopup(auth, googleProvider)
 
       // 2. Verificar role: 'admin' en Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid))
-      const role    = userDoc.data()?.role
+      const profile = await getUserProfile(user.uid)
 
-      if (role !== 'admin') {
+      if (profile?.role !== 'admin') {
         await auth.signOut()
         toast.error('Tu cuenta no tiene permisos de administrador')
         setLoading(false)
         return
       }
 
-      // 3. Guardar token en cookie para el middleware
-      const token = await user.getIdToken()
-      document.cookie = `calixto-admin-token=${token}; path=/; max-age=3600; SameSite=Strict`
+      // 3. Guardar token en cookie para el proxy
+      await setAdminSessionCookie(user)
 
       toast.success(`Bienvenido, ${user.displayName?.split(' ')[0]}`)
       router.push('/admin/ordenes')
@@ -70,7 +68,6 @@ export default function AdminLoginPage() {
                      hover:bg-gray-50 hover:shadow-lg
                      disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {/* Google icon SVG */}
           <svg width="18" height="18" viewBox="0 0 18 18">
             <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
             <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>

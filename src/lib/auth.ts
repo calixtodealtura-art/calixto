@@ -70,3 +70,12 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 export function onAuthChange(callback: (user: User | null) => void) {
   return onAuthStateChanged(auth, callback)
 }
+// ── Cookie de sesión para el panel admin (consumida por proxy.ts) ─────────
+export async function setAdminSessionCookie(user: User): Promise<void> {
+  const token = await user.getIdToken()
+  document.cookie = `calixto-admin-token=${token}; path=/; max-age=3600; SameSite=Strict`
+}
+
+export function clearAdminSessionCookie(): void {
+  document.cookie = 'calixto-admin-token=; path=/; max-age=0'
+}
