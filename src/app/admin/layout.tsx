@@ -3,11 +3,11 @@
 import Link                        from 'next/link'
 import { usePathname, useRouter }  from 'next/navigation'
 import { useEffect, useState }     from 'react'
-import { signOut }                 from 'firebase/auth'
 import { collection, query, where, getCountFromServer } from 'firebase/firestore'
-import { auth, db }                from '@/lib/firebase'
-import { ShoppingBag, Package, BarChart2, Truck, MessageSquare, LogOut, Package2 } from 'lucide-react'
+import { db }                      from '@/lib/firebase'
+import { signOut, clearAdminSessionCookie } from '@/lib/auth'
 import { cn }                      from '@/lib/utils'
+import { ShoppingBag, Package, BarChart2, Truck, MessageSquare, LogOut, Package2, Users } from 'lucide-react'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -30,21 +30,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname])
 
   async function handleLogout() {
-    await signOut(auth)
-    document.cookie = 'calixto-admin-token=; path=/; max-age=0'
+    await signOut()
+    clearAdminSessionCookie()
     router.push('/admin/login')
   }
 
   if (pathname === '/admin/login') return <>{children}</>
 
   const NAV = [
-  { href: '/admin/ordenes',   label: 'Órdenes',   icon: ShoppingBag,   badge: null   },
-  { href: '/admin/productos', label: 'Productos',  icon: Package,       badge: null   },
-  { href: '/admin/combos',    label: 'Combos',     icon: Package2,      badge: null   },
-  { href: '/admin/stock',     label: 'Stock',      icon: BarChart2,     badge: null   },
-  { href: '/admin/envios',    label: 'Envíos',     icon: Truck,         badge: null   }, // 👈 nuevo
-  { href: '/admin/mensajes',  label: 'Mensajes',   icon: MessageSquare, badge: unread },
-]
+    { href: '/admin/ordenes',   label: 'Órdenes',   icon: ShoppingBag,   badge: null   },
+    { href: '/admin/productos', label: 'Productos',  icon: Package,       badge: null   },
+    { href: '/admin/usuarios',  label: 'Usuarios',   icon: Users,         badge: null   },
+    { href: '/admin/combos',    label: 'Combos',     icon: Package2,      badge: null   },
+    { href: '/admin/stock',     label: 'Stock',      icon: BarChart2,     badge: null   },
+    { href: '/admin/envios',    label: 'Envíos',     icon: Truck,         badge: null   },
+    { href: '/admin/mensajes',  label: 'Mensajes',   icon: MessageSquare, badge: unread },
+  ]
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] flex">

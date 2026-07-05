@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useCartStore }    from '@/store/cartStore'
 import { useAuthStore }    from '@/store/authStore'
 import { useShippingConfig } from '@/lib/hooks/useShippingConfig'
-import { signOut }         from '@/lib/auth'
+import { signOut, clearAdminSessionCookie } from '@/lib/auth'
 import { cn, formatPrice } from '@/lib/utils'
 import CalixtIcon          from '@/components/ui/CalixtIcon'
 import DynamicNav          from '@/components/layout/DynamicNav'
@@ -47,12 +47,26 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Logout de cliente
   async function handleLogout() {
     try {
       await signOut()
       setUserMenuOpen(false)
       toast.success('Sesión cerrada')
       router.push('/')
+    } catch {
+      toast.error('No se pudo cerrar sesión')
+    }
+  }
+
+  // Logout de admin: además de cerrar sesión en Firebase, borra la cookie que lee el proxy
+  async function handleAdminLogout() {
+    try {
+      await signOut()
+      clearAdminSessionCookie()
+      setUserMenuOpen(false)
+      toast.success('Sesión cerrada')
+      router.push('/admin/login')
     } catch {
       toast.error('No se pudo cerrar sesión')
     }
@@ -108,13 +122,37 @@ export default function Header() {
                 <User size={19} strokeWidth={1.5} />
               </Link>
             ) : role === 'admin' ? (
-              <Link
-                href="/admin"
-                aria-label="Administración"
-                className="text-green-deep hover:text-orange transition-colors"
-              >
-                <User size={19} strokeWidth={1.5} />
-              </Link>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(v => !v)}
+                  aria-label="Panel de administración"
+                  className="text-green-deep hover:text-orange transition-colors"
+                >
+                  <User size={19} strokeWidth={1.5} />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-cream-warm shadow-lg z-50">
+                    <p className="px-4 py-3 text-[11px] text-gray-400 font-light truncate border-b border-cream-warm">
+                      {user.email}
+                    </p>
+                    <Link
+                      href="/admin"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm text-green-deep hover:bg-cream transition-colors"
+                    >
+                      Panel de administración
+                    </Link>
+                    <button
+                      onClick={handleAdminLogout}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-terra hover:bg-cream transition-colors text-left"
+                    >
+                      <LogOut size={14} strokeWidth={1.5} />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -202,10 +240,10 @@ export default function Header() {
               Nosotros
             </Link>
 
-            {/* Logout en mobile, si es cliente logueado */}
-            {user && role !== 'admin' && (
+            {/* Logout en mobile, según el rol */}
+            {user && (
               <button
-                onClick={() => { setMobileOpen(false); handleLogout() }}
+                onClick={() => { setMobileOpen(false); role === 'admin' ? handleAdminLogout() : handleLogout() }}
                 className="text-[12px] tracking-[0.12em] uppercase text-terra
                            py-3 font-light text-left"
               >
