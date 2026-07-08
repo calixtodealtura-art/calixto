@@ -159,7 +159,7 @@ export default function CartDrawer() {
                   {remaining > 0 ? (
                     <>Agregá <strong className="text-green-olive">{formatPrice(remaining)}</strong> más para envío gratis</>
                   ) : (
-                    <span className="text-green-olive font-medium">🎉 ¡Tenés envío gratis!</span>
+                    <span className="text-green-olive font-medium">🎉 ¡Tenés envío gratis si sos de CABA o GBA! Sino consultar costo de envio.</span>
                   )}
                 </p>
               </>

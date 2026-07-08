@@ -342,7 +342,7 @@ export default function CheckoutPage() {
                     ? '$0'
                     : (step === 'form' && !configReady)
                     ? '—'
-                    : displayShipping === 0 ? '🎉 Gratis' : formatPrice(displayShipping)}
+                    : displayShipping === 0 ? '🎉 Gratis si sos de CABA o GBA, sino consultar' : formatPrice(displayShipping)}
                 </span>
               </div>
 
