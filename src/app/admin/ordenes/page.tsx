@@ -3,7 +3,7 @@
 import { useEffect, useState }   from 'react'
 import { collection, getDocs,
          orderBy, query, doc,
-         updateDoc }             from 'firebase/firestore'
+         updateDoc, runTransaction } from 'firebase/firestore'
 import { db }                    from '@/lib/firebase'
 import { formatPrice }           from '@/lib/utils'
 import toast                     from 'react-hot-toast'
@@ -23,8 +23,15 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 const STATUS_OPTIONS: OrderStatus[] = [
-  'pendiente', 'confirmado', 'enviado', 'entregado'
+  'pendiente', 'pagado', 'confirmado', 'enviado',
+  'entregado', 'cancelado', 'reembolsado',
 ]
+
+// Estados a partir de los cuales se considera que el stock ya debe estar comprometido
+const STOCK_DEDUCTING_STATUSES: OrderStatus[] = ['enviado', 'entregado']
+
+// Estados que, si el stock ya había sido descontado, ameritan devolverlo
+const STOCK_RESTORING_STATUSES: OrderStatus[] = ['cancelado', 'reembolsado']
 
 const DELIVERY_ICONS = {
   retiro:         Store,
@@ -59,14 +66,74 @@ export default function OrdenesPage() {
     fetchOrders()
   }, [])
 
+  // Descuenta el stock de cada producto de la orden, dentro de una transacción
+  // para evitar condiciones de carrera si hay varias ventas al mismo tiempo.
+  async function deductStock(order: Order) {
+    await runTransaction(db, async (transaction) => {
+      for (const item of order.items) {
+        const productRef  = doc(db, 'products', item.productId)
+        const productSnap = await transaction.get(productRef)
+
+        if (!productSnap.exists()) continue // producto eliminado, no hay nada que descontar
+
+        const currentStock = productSnap.data().stock ?? 0
+        transaction.update(productRef, { stock: currentStock - item.quantity })
+      }
+
+      transaction.update(doc(db, 'orders', order.id), { stockDeducted: true })
+    })
+  }
+
+  // Devuelve al stock las unidades que se habían descontado, si la orden se cancela/reembolsa
+  async function restoreStock(order: Order) {
+    await runTransaction(db, async (transaction) => {
+      for (const item of order.items) {
+        const productRef  = doc(db, 'products', item.productId)
+        const productSnap = await transaction.get(productRef)
+
+        if (!productSnap.exists()) continue
+
+        const currentStock = productSnap.data().stock ?? 0
+        transaction.update(productRef, { stock: currentStock + item.quantity })
+      }
+
+      // stockDeducted vuelve a false: si la orden se reactiva más adelante
+      // (ej. pasa de nuevo a 'enviado'), el stock se puede volver a descontar
+      transaction.update(doc(db, 'orders', order.id), { stockDeducted: false })
+    })
+  }
+
   async function handleStatusChange(orderId: string, newStatus: OrderStatus) {
+    const order = orders.find(o => o.id === orderId)
+    if (!order) return
+
     try {
       await updateDoc(doc(db, 'orders', orderId), { status: newStatus })
+
+      let stockDeducted = order.stockDeducted ?? false
+
+      // Caso 1: el nuevo estado compromete stock y todavía no se había descontado
+      if (STOCK_DEDUCTING_STATUSES.includes(newStatus) && !stockDeducted) {
+        await deductStock(order)
+        stockDeducted = true
+        toast.success('Estado actualizado y stock descontado')
+      }
+      // Caso 2: el nuevo estado es cancelación/reembolso y el stock ya estaba descontado
+      else if (STOCK_RESTORING_STATUSES.includes(newStatus) && stockDeducted) {
+        await restoreStock(order)
+        stockDeducted = false
+        toast.success('Estado actualizado y stock repuesto')
+      }
+      // Caso 3: cambio de estado sin ningún efecto sobre stock
+      else {
+        toast.success('Estado actualizado')
+      }
+
       setOrders(prev =>
-        prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
+        prev.map(o => o.id === orderId ? { ...o, status: newStatus, stockDeducted } : o)
       )
-      toast.success('Estado actualizado')
-    } catch {
+    } catch (err) {
+      console.error(err)
       toast.error('No se pudo actualizar')
     }
   }
@@ -201,6 +268,11 @@ export default function OrdenesPage() {
                     {order.shippingPending && (
                       <p className="text-[11px] text-orange font-medium mt-3">
                         ⚠ Envío al interior — coordinar costo con el cliente
+                      </p>
+                    )}
+                    {order.stockDeducted && (
+                      <p className="text-[11px] text-green-olive font-light mt-3">
+                        ✓ Stock descontado
                       </p>
                     )}
                   </div>

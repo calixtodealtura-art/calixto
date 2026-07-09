@@ -60,7 +60,7 @@ export interface UserProfile {
   email:       string | null
   displayName: string | null
   photoURL:    string | null
-  role?:       'admin' | 'customer'   // 👈 nuevo, opcional para no romper docs viejos
+  role?:       'admin' | 'customer'
   createdAt:   Date
 }
 
@@ -77,7 +77,15 @@ export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
 }
 
 // ── Orden ──────────────────────────────────────────────────────────────────
-export type OrderStatus = 'pendiente' | 'confirmado' | 'enviado' | 'entregado'
+export type OrderStatus =
+  | 'pendiente'
+  | 'pagado'
+  | 'confirmado'
+  | 'enviado'
+  | 'entregado'
+  | 'rechazado'
+  | 'cancelado'
+  | 'reembolsado'
 
 export interface OrderItem {
   productId:   string
@@ -111,6 +119,7 @@ export interface Order {
   pickupContact?:   PickupContact     // presente solo si deliveryMethod === 'retiro'
   shippingCost:     number            // 0 para retiro y envío al interior (se cobra aparte)
   shippingPending:  boolean           // true solo si deliveryMethod === 'envio_interior'
+  stockDeducted?:   boolean           // true una vez que se descontó el stock de esta orden
   total:            number
   status:           OrderStatus
   createdAt:        Date
