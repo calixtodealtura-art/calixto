@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const rawImage = product.images?.[0]
   const imageUrl = rawImage
     ? (rawImage.startsWith('http') ? rawImage : `https://calixto.ar${rawImage}`)
-    : 'https://calixto.ar/og-default.jpg'
+    : 'https://calixto.ar/og-default.png'
 
   const description = product.description
     ? product.description.slice(0, 160)
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: product.name,
       description,
       url: `https://calixto.ar/productos/${slug}`, // ajustá la ruta según tu estructura
-      siteName: 'Tu Tienda', // reemplazá con el nombre real de tu sitio
+      siteName: 'Calixto Sabores de Altura', // reemplazá con el nombre real de tu sitio
       images: [
         {
           url: imageUrl,

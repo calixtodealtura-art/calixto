@@ -8,6 +8,7 @@ import WhatsAppButton from '@/components/ui/WhatsAppButton'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://calixto.ar'), // 👈 reemplazá por tu dominio real
   title:       'Calixto — Origen & Sabor',
   description: 'Aceites de oliva virgen extra, varietales, acetos, aceitunas y salsas artesanales de los Andes.',
   keywords:    ['aceite de oliva', 'virgen extra', 'Cuyo', 'gourmet', 'aceto', 'aceitunas'],
@@ -15,6 +16,23 @@ export const metadata: Metadata = {
     title:       'Calixto — Origen & Sabor',
     description: 'Productos gourmet de nuestros olivares de altura en Cuyo, Argentina.',
     type:        'website',
+    url:         '/',
+    siteName:    'Calixto — Origen & Sabor',
+    images: [
+      {
+        url:    '/og-default.png', // 👈 imagen genérica del sitio, poné el archivo en /public
+        width:  1200,
+        height: 630,
+        alt:    'Calixto — Origen & Sabor',
+      },
+    ],
+    locale: 'es_AR',
+  },
+  twitter: {
+    card:        'summary_large_image',
+    title:       'Calixto — Origen & Sabor',
+    description: 'Productos gourmet de nuestros olivares de altura en Cuyo, Argentina.',
+    images:      ['/og-default.png'],
   },
 }
 
