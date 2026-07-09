@@ -1,4 +1,5 @@
 import { notFound }          from 'next/navigation'
+import { Metadata }          from 'next'
 import { getProductBySlug }   from '@/lib/firestore'
 import AddToCartButton        from '@/components/product/AddToCartButton'
 import ProductGallery         from '@/components/product/ProductGallery'
@@ -6,6 +7,55 @@ import { formatPrice }        from '@/lib/utils'
 
 interface Props {
   params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const product = await getProductBySlug(slug).catch(() => null)
+
+  if (!product) {
+    return {
+      title: 'Producto no encontrado',
+    }
+  }
+
+  // Si tu `product.images[0]` guarda una ruta relativa, conviértela en absoluta.
+  // Reemplazá 'https://tudominio.com' por tu dominio real.
+  const rawImage = product.images?.[0]
+  const imageUrl = rawImage
+    ? (rawImage.startsWith('http') ? rawImage : `https://calixto.ar${rawImage}`)
+    : 'https://calixto.ar/og-default.jpg'
+
+  const description = product.description
+    ? product.description.slice(0, 160)
+    : `${product.name} - Descubrí este producto en nuestra tienda.`
+
+  return {
+    title: product.name,
+    description,
+    openGraph: {
+      title: product.name,
+      description,
+      url: `https://calixto.ar/productos/${slug}`, // ajustá la ruta según tu estructura
+      siteName: 'Tu Tienda', // reemplazá con el nombre real de tu sitio
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: product.name,
+        },
+      ],
+      type: 'website',
+      locale: 'es_AR', // o 'es_ES' / 'es_MX' según tu público
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description,
+      images: [imageUrl],
+    },
+  }
 }
 
 export default async function ProductPage({ params }: Props) {
