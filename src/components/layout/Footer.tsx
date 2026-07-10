@@ -59,12 +59,18 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-[11px] text-cream/30 font-light tracking-wide">
-            © {new Date().getFullYear()} Calixto — Sabores de altura. Todos los derechos reservados.
-          </p>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+          
+          <a href="https://www.creativit.com.ar/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-cream/30 font-light tracking-wide
+                      hover:text-cream/60 transition-colors duration-200"
+          >
+            © {new Date().getFullYear()}  Creativit - Páginas web que convierten visitas en clientes. Todos los derechos reservados.
+          </a>
           <p className="text-[11px] text-cream/30 font-light">
-            Cuyo, Argentina
+            Pilar, Argentina
           </p>
         </div>
       </div>

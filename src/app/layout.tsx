@@ -6,6 +6,7 @@ import Footer             from '@/components/layout/Footer'
 import CartDrawer         from '@/components/cart/CartDrawer'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
 import './globals.css'
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://calixto.ar'), // 👈 reemplazá por tu dominio real
@@ -66,6 +67,7 @@ export default function RootLayout({
           <Footer />
         </AuthProvider>
       </body>
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
     </html>
   )
 }
