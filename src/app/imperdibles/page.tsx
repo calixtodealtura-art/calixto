@@ -1,22 +1,17 @@
+import type { Metadata }  from 'next'
 import Link              from 'next/link'
 import Image             from 'next/image'
-import {
-  collection, query, where,
-  getDocs, orderBy,
-} from 'firebase/firestore'
-import { db }            from '@/lib/firebase'
+import { getCombos }     from '@/lib/firestore'
 import { formatPrice }   from '@/lib/utils'
-import type { Combo }    from '@/types'
 
-async function getCombos(): Promise<Combo[]> {
-  const snap = await getDocs(
-    query(
-      collection(db, 'combos'),
-      where('active', '==', true),
-      orderBy('createdAt', 'desc')
-    )
-  )
-  return snap.docs.map(d => ({ ...d.data(), id: d.id }) as Combo)
+export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: 'Combos gourmet imperdibles | Calixto',
+  description: 'Selecciones especiales de nuestros mejores productos a un precio único. Más sabor, mejor precio.',
+  alternates: {
+    canonical: '/imperdibles',
+  },
 }
 
 export default async function CombosPage() {
@@ -72,7 +67,7 @@ export default async function CombosPage() {
               return (
                 <Link
                   key={combo.id}
-                  href={`/combos/${combo.slug}`}
+                  href={`/imperdibles/${combo.slug}`}
                   className="group bg-white border border-cream-warm
                              hover:-translate-y-2 hover:shadow-xl transition-all duration-300"
                 >
@@ -86,6 +81,7 @@ export default async function CombosPage() {
                         src={combo.images[0]}
                         alt={combo.name}
                         fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         className="object-cover transition-transform duration-500
                                    group-hover:scale-105"
                       />

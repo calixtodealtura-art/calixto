@@ -3,7 +3,10 @@ import { Metadata }          from 'next'
 import { getProductBySlug }   from '@/lib/firestore'
 import AddToCartButton        from '@/components/product/AddToCartButton'
 import ProductGallery         from '@/components/product/ProductGallery'
+import JsonLd                 from '@/components/seo/JsonLd'
 import { formatPrice }        from '@/lib/utils'
+
+export const revalidate = 60
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -19,8 +22,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
-  // Si tu `product.images[0]` guarda una ruta relativa, conviértela en absoluta.
-  // Reemplazá 'https://tudominio.com' por tu dominio real.
   const rawImage = product.images?.[0]
   const imageUrl = rawImage
     ? (rawImage.startsWith('http') ? rawImage : `https://calixto.ar${rawImage}`)
@@ -33,11 +34,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: product.name,
     description,
+    alternates: {
+      canonical: `/producto/${slug}`,
+    },
     openGraph: {
       title: product.name,
       description,
-      url: `https://calixto.ar/productos/${slug}`, // ajustá la ruta según tu estructura
-      siteName: 'Calixto Sabores de Altura', // reemplazá con el nombre real de tu sitio
+      url: `https://calixto.ar/producto/${slug}`,
+      siteName: 'Calixto — Origen & Sabor',
       images: [
         {
           url: imageUrl,
@@ -47,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
       ],
       type: 'website',
-      locale: 'es_AR', // o 'es_ES' / 'es_MX' según tu público
+      locale: 'es_AR',
     },
     twitter: {
       card: 'summary_large_image',
@@ -64,8 +68,28 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product) notFound()
 
+  const productJsonLd = {
+    '@context':    'https://schema.org',
+    '@type':       'Product',
+    name:          product.name,
+    description:   product.description,
+    image:         product.images ?? [],
+    sku:           product.id,
+    category:      product.category,
+    offers: {
+      '@type':         'Offer',
+      url:              `https://calixto.ar/producto/${slug}`,
+      priceCurrency:    'ARS',
+      price:            product.price,
+      availability:     product.stock > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+    },
+  }
+
   return (
     <div className="min-h-screen bg-ivory">
+      <JsonLd data={productJsonLd} />
       <div className="max-w-screen-xl mx-auto px-8 md:px-20 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
 

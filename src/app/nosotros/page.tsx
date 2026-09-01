@@ -1,5 +1,14 @@
+import type { Metadata } from 'next'
 import LogoPrincipal from '@/components/ui/LogoPrincipal'
 import Image          from 'next/image'
+
+export const metadata: Metadata = {
+  title: 'Nosotros | Calixto — Origen & Sabor',
+  description: 'Calixto conecta productores de la región de Cuyo con consumidores que valoran el origen, la calidad y la identidad de cada producto.',
+  alternates: {
+    canonical: '/nosotros',
+  },
+}
 
 export default function NosotrosPage() {
   return (
@@ -14,6 +23,7 @@ export default function NosotrosPage() {
                   src="/imagenes/portada2.png"
                   alt=""
                   fill
+                  sizes="100vw"
                   className="object-cover object-center"
                   priority
                 />
@@ -82,8 +92,8 @@ export default function NosotrosPage() {
               src="/imagenes/portada.png"
               alt=""
               fill
+              sizes="384px"
               className="object-cover object-center"
-              priority
             />
 
             <LogoPrincipal color="#fff0dc" size={220} className="relative z-10" />

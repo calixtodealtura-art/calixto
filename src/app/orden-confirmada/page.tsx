@@ -1,5 +1,14 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import OrdenContent from './OrdenContent'
+
+export const metadata: Metadata = {
+  title: 'Orden confirmada | Calixto',
+  robots: {
+    index:  false,
+    follow: false,
+  },
+}
 
 export default function OrdenConfirmadaPage() {
   return (

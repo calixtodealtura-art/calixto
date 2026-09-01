@@ -47,6 +47,7 @@ export default function ProductGallery({ images, productName }: Props) {
                 src={src}
                 alt={`${productName} — miniatura ${i + 1}`}
                 fill
+                sizes="80px"
                 className="object-cover"
               />
             </button>
@@ -61,6 +62,7 @@ export default function ProductGallery({ images, productName }: Props) {
             src={images[activeIndex]}
             alt={`${productName} — foto ${activeIndex + 1}`}
             fill
+            sizes="(min-width: 768px) 50vw, 100vw"
             className="object-cover"
             priority
           />

@@ -1,9 +1,7 @@
 'use client'
 
-import { useEffect, useState }  from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { getProducts }          from '@/lib/firestore'
-import ProductCard              from '@/components/product/ProductCard'
+import { useRouter } from 'next/navigation'
+import ProductCard    from '@/components/product/ProductCard'
 import type { Product, ProductCategory } from '@/types'
 
 const CATEGORIES: { slug: ProductCategory; label: string }[] = [
@@ -14,22 +12,13 @@ const CATEGORIES: { slug: ProductCategory; label: string }[] = [
   { slug: 'especiales', label: 'Especiales Gourmet' },
 ]
 
-export default function ProductosPage() {
-  const searchParams = useSearchParams()
-  const router       = useRouter()
+interface Props {
+  products: Product[]
+  category: ProductCategory | null
+}
 
-  const category = searchParams.get('categoria') as ProductCategory | null
-
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading,  setLoading]  = useState(true)
-
-  useEffect(() => {
-    setLoading(true)
-    getProducts({ category: category ?? undefined })
-      .then(setProducts)
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false))
-  }, [category])
+export default function ProductosClient({ products, category }: Props) {
+  const router = useRouter()
 
   function handleCategoryChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value
@@ -116,21 +105,7 @@ export default function ProductosPage() {
         </div>
 
         {/* Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="aspect-[3/4] bg-cream-warm" />
-                <div className="p-5 border-t border-cream-warm space-y-2">
-                  <div className="h-2 w-16 bg-cream-warm rounded" />
-                  <div className="h-5 w-3/4 bg-cream-warm rounded" />
-                  <div className="h-3 w-full bg-cream-warm rounded" />
-                  <div className="h-6 w-1/3 bg-cream-warm rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : products.length > 0 ? (
+        {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
             {products.map(product => (
               <ProductCard key={product.id} product={product} />

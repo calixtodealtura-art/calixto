@@ -2,8 +2,7 @@
 
 import Link                          from 'next/link'
 import { useEffect, useState }       from 'react'
-import { collection, getDocs }       from 'firebase/firestore'
-import { db }                        from '@/lib/firebase'
+import { getProductCountByCategory } from '@/lib/firestore'
 import type { ProductCategory }      from '@/types'
 
 const ALL_CATEGORIES: { slug: ProductCategory; label: string }[] = [
@@ -25,13 +24,16 @@ export default function DynamicNav() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const snap = await getDocs(collection(db, 'products'))
-        const cats = new Set<ProductCategory>()
-        snap.docs.forEach(d => {
-          const cat = d.data().category as ProductCategory
-          if (cat) cats.add(cat)
-        })
-        setActiveCategories(Array.from(cats))
+        // Un conteo por categoría (aggregation query, no descarga documentos)
+        // en vez de traer la colección products entera solo para saber
+        // qué categorías tienen al menos un producto.
+        const counts = await Promise.all(
+          ALL_CATEGORIES.map(cat => getProductCountByCategory(cat.slug))
+        )
+        const cats = ALL_CATEGORIES
+          .filter((_, i) => counts[i] > 0)
+          .map(c => c.slug)
+        setActiveCategories(cats)
       } catch {
         // Si falla, mostramos todas las categorías como fallback
         setActiveCategories(ALL_CATEGORIES.map(c => c.slug))

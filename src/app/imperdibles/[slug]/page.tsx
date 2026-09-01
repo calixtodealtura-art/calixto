@@ -1,31 +1,61 @@
 import { notFound }      from 'next/navigation'
+import type { Metadata } from 'next'
 import Link              from 'next/link'
 import Image             from 'next/image'
-import {
-  collection, query, where,
-  getDocs, limit,
-} from 'firebase/firestore'
-import { db }            from '@/lib/firebase'
+import { getComboBySlug } from '@/lib/firestore'
 import { formatPrice }   from '@/lib/utils'
 import AddComboToCartButton from '@/components/product/AddComboToCartButton'
-import type { Combo }    from '@/types'
+import JsonLd             from '@/components/seo/JsonLd'
+
+export const revalidate = 60
 
 interface Props {
   params: Promise<{ slug: string }>
 }
 
-async function getComboBySlug(slug: string): Promise<Combo | null> {
-  const snap = await getDocs(
-    query(
-      collection(db, 'combos'),
-      where('slug',   '==', slug),
-      where('active', '==', true),
-      limit(1)
-    )
-  )
-  if (snap.empty) return null
-  const d = snap.docs[0]
-  return { ...d.data(), id: d.id } as Combo
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const combo = await getComboBySlug(slug).catch(() => null)
+
+  if (!combo) {
+    return { title: 'Combo no encontrado' }
+  }
+
+  const description = combo.description
+    ? combo.description.slice(0, 160)
+    : `${combo.name} - Combo especial con descuento en Calixto.`
+
+  const imageUrl = combo.images?.[0] ?? 'https://calixto.ar/og-default.png'
+
+  return {
+    title: combo.name,
+    description,
+    alternates: {
+      canonical: `/imperdibles/${slug}`,
+    },
+    openGraph: {
+      title:    combo.name,
+      description,
+      url:      `https://calixto.ar/imperdibles/${slug}`,
+      siteName: 'Calixto — Origen & Sabor',
+      images: [
+        {
+          url:    imageUrl,
+          width:  1200,
+          height: 630,
+          alt:    combo.name,
+        },
+      ],
+      type:   'website',
+      locale: 'es_AR',
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       combo.name,
+      description,
+      images:      [imageUrl],
+    },
+  }
 }
 
 export default async function ComboPage({ params }: Props) {
@@ -36,15 +66,32 @@ export default async function ComboPage({ params }: Props) {
 
   const savingsPct = Math.round((combo.savings / combo.fullPrice) * 100)
 
+  const comboJsonLd = {
+    '@context':  'https://schema.org',
+    '@type':     'Product',
+    name:        combo.name,
+    description: combo.description,
+    image:       combo.images ?? [],
+    sku:         combo.id,
+    offers: {
+      '@type':      'Offer',
+      url:           `https://calixto.ar/imperdibles/${slug}`,
+      priceCurrency: 'ARS',
+      price:         combo.comboPrice,
+      availability:  'https://schema.org/InStock',
+    },
+  }
+
   return (
     <div className="min-h-screen bg-ivory">
+      <JsonLd data={comboJsonLd} />
 
       {/* Breadcrumb */}
       <div className="max-w-screen-xl mx-auto px-8 md:px-20 pt-8">
         <nav className="flex items-center gap-2 text-[11px] tracking-[0.1em] uppercase font-light text-gray-400">
           <Link href="/" className="hover:text-green-deep transition-colors">Inicio</Link>
           <span>·</span>
-          <Link href="/combos" className="hover:text-green-deep transition-colors">Combos</Link>
+          <Link href="/imperdibles" className="hover:text-green-deep transition-colors">Combos</Link>
           <span>·</span>
           <span className="text-green-deep">{combo.name}</span>
         </nav>
@@ -62,6 +109,7 @@ export default async function ComboPage({ params }: Props) {
                 src={combo.images[0]}
                 alt={combo.name}
                 fill
+                sizes="(min-width: 768px) 50vw, 100vw"
                 className="object-cover"
                 priority
               />
@@ -206,7 +254,7 @@ export default async function ComboPage({ params }: Props) {
 
       {/* CTA volver */}
       <div className="text-center py-16 border-t border-cream-warm mt-8">
-        <Link href="/combos" className="btn-secondary">
+        <Link href="/imperdibles" className="btn-secondary">
           ← Ver todos los combos
         </Link>
       </div>

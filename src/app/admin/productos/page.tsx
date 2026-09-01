@@ -6,6 +6,7 @@ import { collection, getDocs,
          orderBy, query, doc,
          deleteDoc }                   from 'firebase/firestore'
 import { db }                          from '@/lib/firebase'
+import { normalizeProduct }            from '@/lib/firestore'
 import { formatPrice }                 from '@/lib/utils'
 import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 import toast                           from 'react-hot-toast'
@@ -25,7 +26,7 @@ export default function AdminProductosPage() {
       const snap = await getDocs(
         query(collection(db, 'products'), orderBy('createdAt', 'desc'))
       )
-      setProducts(snap.docs.map(d => ({ ...d.data(), id: d.id }) as Product))
+      setProducts(snap.docs.map(d => normalizeProduct(d.id, d.data())))
     } catch (err) {
       console.error(err)
       toast.error('Error cargando productos')

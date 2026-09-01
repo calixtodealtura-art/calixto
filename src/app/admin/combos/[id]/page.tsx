@@ -7,10 +7,11 @@ import {
   doc, getDoc, addDoc, updateDoc, Timestamp,
 } from 'firebase/firestore'
 import { db }          from '@/lib/firebase'
+import { normalizeProduct, normalizeCombo } from '@/lib/firestore'
 import { formatPrice, slugify } from '@/lib/utils'
 import { Plus, Trash2, Search } from 'lucide-react'
 import toast           from 'react-hot-toast'
-import type { Product, Combo, ComboItem } from '@/types'
+import type { Product, ComboItem } from '@/types'
 
 const EMPTY_COMBO = {
   name:        '',
@@ -41,7 +42,7 @@ export default function ComboFormPage() {
       const snap = await getDocs(
         query(collection(db, 'products'), orderBy('name', 'asc'))
       )
-      setProducts(snap.docs.map(d => ({ ...d.data(), id: d.id }) as Product))
+      setProducts(snap.docs.map(d => normalizeProduct(d.id, d.data())))
     }
     fetchProducts()
   }, [])
@@ -53,7 +54,7 @@ export default function ComboFormPage() {
       try {
         const snap = await getDoc(doc(db, 'combos', id))
         if (!snap.exists()) { toast.error('Combo no encontrado'); router.push('/admin/combos'); return }
-        const data = snap.data() as Combo
+        const data = normalizeCombo(snap.id, snap.data())
         setForm({
           name:        data.name,
           slug:        data.slug,
@@ -64,6 +65,9 @@ export default function ComboFormPage() {
           active:      data.active,
         })
         setItems(data.items)
+      } catch (err) {
+        console.error(err)
+        toast.error('Error cargando el combo')
       } finally {
         setLoading(false)
       }

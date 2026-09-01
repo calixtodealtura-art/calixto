@@ -1,9 +1,7 @@
 import {
   collection,
-  doc,
   getDocs,
-  getDoc,
-  addDoc,
+  getCountFromServer,
   query,
   where,
   orderBy,
@@ -12,7 +10,7 @@ import {
   type QueryConstraint,
 } from 'firebase/firestore'
 import { db } from './firebase'
-import type { Product, Order, ProductCategory } from '@/types'
+import type { Product, Order, Combo, ProductCategory } from '@/types'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function toDate(val: unknown): Date {
@@ -21,13 +19,32 @@ function toDate(val: unknown): Date {
   return new Date()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function docToProduct(id: string, data: Record<string, any>): Product {
+// Normaliza un doc crudo de Firestore (createdAt como Timestamp) al tipo de
+// la app (createdAt como Date). Exportado para que las páginas de admin que
+// leen estas colecciones directamente no casteen `as Product`/`as Combo` a
+// mano y se olviden de convertir el Timestamp.
+export function normalizeProduct(id: string, data: Record<string, unknown>): Product {
   return {
     ...data,
     id,
     createdAt: toDate(data.createdAt),
   } as Product
+}
+
+export function normalizeCombo(id: string, data: Record<string, unknown>): Combo {
+  return {
+    ...data,
+    id,
+    createdAt: toDate(data.createdAt),
+  } as Combo
+}
+
+export function normalizeOrder(id: string, data: Record<string, unknown>): Order {
+  return {
+    ...data,
+    id,
+    createdAt: toDate(data.createdAt),
+  } as Order
 }
 
 // ── Productos ──────────────────────────────────────────────────────────────
@@ -45,7 +62,7 @@ export async function getProducts(opts?: {
   if (opts?.limitN)    constraints.push(limit(opts.limitN))
 
   const snap = await getDocs(query(collection(db, PRODUCTS_COL), ...constraints))
-  return snap.docs.map(d => docToProduct(d.id, d.data()))
+  return snap.docs.map(d => normalizeProduct(d.id, d.data()))
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -54,27 +71,55 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   )
   if (snap.empty) return null
   const d = snap.docs[0]
-  return docToProduct(d.id, d.data())
+  return normalizeProduct(d.id, d.data())
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
-  const snap = await getDoc(doc(db, PRODUCTS_COL, id))
-  if (!snap.exists()) return null
-  return docToProduct(snap.id, snap.data())
+// Conteo por categoría vía aggregation query — no descarga los documentos,
+// solo el número. Usado por el home y por el menú de navegación.
+export async function getProductCountByCategory(category: ProductCategory): Promise<number> {
+  const snap = await getCountFromServer(
+    query(collection(db, PRODUCTS_COL), where('category', '==', category))
+  )
+  return snap.data().count
+}
+
+// ── Combos ─────────────────────────────────────────────────────────────────
+const COMBOS_COL = 'combos'
+
+export async function getCombos(): Promise<Combo[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, COMBOS_COL),
+      where('active', '==', true),
+      orderBy('createdAt', 'desc')
+    )
+  )
+  return snap.docs.map(d => normalizeCombo(d.id, d.data()))
+}
+
+export async function getComboSlugs(): Promise<string[]> {
+  const snap = await getDocs(
+    query(collection(db, COMBOS_COL), where('active', '==', true))
+  )
+  return snap.docs.map(d => (d.data() as Combo).slug)
+}
+
+export async function getComboBySlug(slug: string): Promise<Combo | null> {
+  const snap = await getDocs(
+    query(
+      collection(db, COMBOS_COL),
+      where('slug',   '==', slug),
+      where('active', '==', true),
+      limit(1)
+    )
+  )
+  if (snap.empty) return null
+  const d = snap.docs[0]
+  return normalizeCombo(d.id, d.data())
 }
 
 // ── Órdenes ────────────────────────────────────────────────────────────────
 const ORDERS_COL = 'orders'
-
-export async function createOrder(
-  order: Omit<Order, 'id' | 'createdAt'>
-): Promise<string> {
-  const ref = await addDoc(collection(db, ORDERS_COL), {
-    ...order,
-    createdAt: Timestamp.now(),
-  })
-  return ref.id
-}
 
 export async function getOrdersByUser(userId: string): Promise<Order[]> {
   const snap = await getDocs(
@@ -84,9 +129,5 @@ export async function getOrdersByUser(userId: string): Promise<Order[]> {
       orderBy('createdAt', 'desc')
     )
   )
-  return snap.docs.map(d => ({
-    ...d.data(),
-    id:        d.id,
-    createdAt: toDate(d.data().createdAt),
-  })) as Order[]
+  return snap.docs.map(d => normalizeOrder(d.id, d.data()))
 }

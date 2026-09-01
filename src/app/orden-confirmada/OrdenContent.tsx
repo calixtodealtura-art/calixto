@@ -4,9 +4,8 @@ import { useState }        from 'react'
 import Link                from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useAuthStore }    from '@/store/authStore'
-import { loginWithEmail, registerWithEmail, loginWithGoogle } from '@/lib/auth'
+import { useAuthForm }     from '@/hooks/useAuthForm'
 import { claimGuestOrder } from '@/lib/orders'
-import toast                from 'react-hot-toast'
 
 export default function OrdenContent() {
   const params  = useSearchParams()
@@ -17,56 +16,27 @@ export default function OrdenContent() {
 
   const { user } = useAuthStore()
 
-  const [mode, setMode]         = useState<'idle' | 'login' | 'register'>('idle')
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [saved, setSaved]       = useState(false)
+  const [mode, setMode]   = useState<'idle' | 'login' | 'register'>('idle')
+  const [saved, setSaved] = useState(false)
 
   async function handleClaim(uid: string) {
     if (!orderId) return
     try {
       await claimGuestOrder(orderId, uid)
-      setSaved(true)
     } catch {
       // Si la orden ya no era de invitado (o algo cambió), no rompemos la experiencia
+    } finally {
       setSaved(true)
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  const { email, setEmail, password, setPassword, loading, submitEmail, submitGoogle } =
+    useAuthForm({ onSuccess: user => handleClaim(user.uid) })
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
-    try {
-      const result = mode === 'login'
-        ? await loginWithEmail(email, password)
-        : await registerWithEmail(email, password)
-
-      await handleClaim(result.uid)
-      toast.success('¡Listo! Tu pedido quedó guardado.')
-    } catch (err: any) {
-      const message =
-        err?.code === 'auth/invalid-credential' ? 'Email o contraseña incorrectos' :
-        err?.code === 'auth/email-already-in-use' ? 'Ese email ya tiene una cuenta' :
-        err?.code === 'auth/weak-password' ? 'La contraseña debe tener al menos 6 caracteres' :
-        'Ocurrió un error. Intentá de nuevo.'
-      toast.error(message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleGoogle() {
-    setLoading(true)
-    try {
-      const user = await loginWithGoogle()
-      await handleClaim(user.uid)
-      toast.success('¡Listo! Tu pedido quedó guardado.')
-    } catch {
-      toast.error('No se pudo iniciar sesión con Google')
-    } finally {
-      setLoading(false)
-    }
+    if (mode === 'idle') return
+    submitEmail(mode, '¡Listo! Tu pedido quedó guardado.')
   }
 
   return (
@@ -121,10 +91,11 @@ export default function OrdenContent() {
 
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <div>
-                    <label className="block text-[11px] tracking-[0.15em] uppercase text-green-olive mb-1.5 font-light">
+                    <label htmlFor="orden-email" className="block text-[11px] tracking-[0.15em] uppercase text-green-olive mb-1.5 font-light">
                       Email
                     </label>
                     <input
+                      id="orden-email"
                       type="email"
                       required
                       value={email}
@@ -134,10 +105,11 @@ export default function OrdenContent() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] tracking-[0.15em] uppercase text-green-olive mb-1.5 font-light">
+                    <label htmlFor="orden-password" className="block text-[11px] tracking-[0.15em] uppercase text-green-olive mb-1.5 font-light">
                       Contraseña
                     </label>
                     <input
+                      id="orden-password"
                       type="password"
                       required
                       minLength={6}
@@ -163,7 +135,7 @@ export default function OrdenContent() {
                 </div>
 
                 <button
-                  onClick={handleGoogle}
+                  onClick={() => submitGoogle('¡Listo! Tu pedido quedó guardado.')}
                   disabled={loading}
                   className="btn-secondary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >

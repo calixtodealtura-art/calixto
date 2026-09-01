@@ -7,6 +7,7 @@ import {
   collection, Timestamp,
 }                                      from 'firebase/firestore'
 import { db }                          from '@/lib/firebase'
+import { normalizeProduct }            from '@/lib/firestore'
 import { slugify, formatPrice }        from '@/lib/utils'
 import { X, ImagePlus }                from 'lucide-react'
 import toast                           from 'react-hot-toast'
@@ -67,7 +68,7 @@ export default function ProductFormPage() {
           router.push('/admin/productos')
           return
         }
-        const data = snap.data() as Product
+        const data = normalizeProduct(snap.id, snap.data())
         setForm({
           name:        data.name        ?? '',
           slug:        data.slug        ?? '',
@@ -128,16 +129,16 @@ export default function ProductFormPage() {
     setUploadPct(0)
 
     try {
-      const cloudName   = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!
-      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-      console.log({
-      cloudName,
-      uploadPreset,
-    })
+      const sigRes = await fetch('/api/upload-signature', { method: 'POST' })
+      if (!sigRes.ok) throw new Error('No se pudo firmar la subida')
+      const { signature, timestamp, apiKey, cloudName, folder } = await sigRes.json()
+
       const formData = new FormData()
-      formData.append('file',         file)
-      formData.append('upload_preset', uploadPreset)
-      formData.append('folder',        'calixto/products')
+      formData.append('file',      file)
+      formData.append('api_key',   apiKey)
+      formData.append('timestamp', String(timestamp))
+      formData.append('signature', signature)
+      formData.append('folder',    folder)
 
       // Usamos XMLHttpRequest para tener progreso de subida
       const url = await new Promise<string>((resolve, reject) => {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import Link  from 'next/link'
@@ -11,6 +12,9 @@ import {
   remainingForFreeShipping,
 } from '@/lib/utils'
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+
 export default function CartDrawer() {
   const {
     items, isOpen, closeCart,
@@ -19,6 +23,49 @@ export default function CartDrawer() {
   } = useCartStore()
 
   const { threshold } = useShippingConfig()
+
+  const panelRef            = useRef<HTMLElement>(null)
+  const previouslyFocused   = useRef<HTMLElement | null>(null)
+
+  // Foco: al abrir, entra al panel (y recuerda qué lo disparó); al cerrar, vuelve ahí.
+  useEffect(() => {
+    if (isOpen) {
+      previouslyFocused.current = document.activeElement as HTMLElement | null
+      panelRef.current?.focus()
+    } else {
+      previouslyFocused.current?.focus()
+    }
+  }, [isOpen])
+
+  // Escape cierra el carrito; Tab queda atrapado dentro del panel mientras está abierto.
+  useEffect(() => {
+    if (!isOpen) return
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        closeCart()
+        return
+      }
+      if (e.key !== 'Tab' || !panelRef.current) return
+
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last  = focusable[focusable.length - 1]
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, closeCart])
 
   const cartTotal  = total()
   const cartCount  = itemCount()
@@ -37,6 +84,10 @@ export default function CartDrawer() {
 
       {/* Panel */}
       <aside
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
         className={`fixed top-0 right-0 h-full w-full max-w-[420px] bg-ivory z-50
                     flex flex-col shadow-2xl
                     transition-transform duration-[400ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]
@@ -84,6 +135,7 @@ export default function CartDrawer() {
                         src={product.images[0]}
                         alt={product.name}
                         fill
+                        sizes="72px"
                         className="object-cover"
                       />
                     ) : (

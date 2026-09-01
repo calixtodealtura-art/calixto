@@ -12,6 +12,17 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
+const missingKeys = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key)
+
+if (missingKeys.length > 0) {
+  throw new Error(
+    `Faltan variables de entorno de Firebase: ${missingKeys.join(', ')}. ` +
+    'Revisá .env.local contra .env.local.example.'
+  )
+}
+
 // Evita inicializar múltiples veces en dev con HMR
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
 

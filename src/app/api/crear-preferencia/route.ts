@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse }     from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
-import { collection, addDoc, doc, getDoc, Timestamp } from 'firebase/firestore'
-import { db }                             from '@/lib/firebase'
-import type { CartItem, ShippingAddress, PickupContact, DeliveryMethod } from '@/types'
+import { z } from 'zod'
+import { getAdminAuth, getAdminDb } from '@/lib/firebaseAdmin'
+import { FieldValue } from 'firebase-admin/firestore'
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -12,35 +12,38 @@ const client = new MercadoPagoConfig({
 const FALLBACK_FREE_SHIPPING_THRESHOLD = 120_000
 const FALLBACK_SHIPPING_COST            = 1_500
 
+const bodySchema = z.object({
+  items: z.array(z.object({
+    product: z.object({ id: z.string().min(1) }).passthrough(),
+    quantity: z.number().int().positive(),
+  })).min(1),
+  deliveryMethod: z.enum(['retiro', 'envio_caba_gba', 'envio_interior']),
+  shippingAddress: z.object({
+    fullName: z.string().min(1).max(120),
+    address:  z.string().min(1).max(200),
+    city:     z.string().min(1).max(120),
+    province: z.string().min(1).max(120),
+    zipCode:  z.string().min(1).max(20),
+    phone:    z.string().min(1).max(40),
+  }).optional(),
+  pickupContact: z.object({
+    fullName: z.string().min(1).max(120),
+    phone:    z.string().min(1).max(40),
+  }).optional(),
+})
+
 export async function POST(req: NextRequest) {
   try {
-    const {
-      items,
-      deliveryMethod,
-      shippingAddress,
-      pickupContact,
-      userId,
-    }: {
-      items:            CartItem[]
-      deliveryMethod:   DeliveryMethod
-      shippingAddress?: ShippingAddress
-      pickupContact?:   PickupContact
-      userId:           string
-    } = await req.json()
+    const parsed = bodySchema.safeParse(await req.json())
 
-    if (!items || items.length === 0) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'El carrito está vacío' },
+        { error: 'Datos de pedido inválidos' },
         { status: 400 }
       )
     }
 
-    if (!deliveryMethod) {
-      return NextResponse.json(
-        { error: 'Falta indicar el método de entrega' },
-        { status: 400 }
-      )
-    }
+    const { items, deliveryMethod, shippingAddress, pickupContact } = parsed.data
 
     if (deliveryMethod === 'retiro' && !pickupContact) {
       return NextResponse.json(
@@ -56,17 +59,56 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // ── Identidad: si viene un token, usamos el uid verificado, nunca el que manda el body ──
+    let userId = 'guest'
+    const authHeader = req.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const decoded = await getAdminAuth().verifyIdToken(authHeader.slice(7))
+        userId = decoded.uid
+      } catch {
+        // Token inválido/expirado: seguimos como invitado en vez de confiar en lo que mande el cliente
+      }
+    }
+
+    const adminDb = getAdminDb()
+
+    // ── Revalidar cada ítem contra Firestore: el precio y el nombre nunca se toman del cliente ──
+    const productSnaps = await Promise.all(
+      items.map(i => adminDb.collection('products').doc(i.product.id).get())
+    )
+
+    const missing = productSnaps.filter(s => !s.exists)
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: 'Uno o más productos del carrito ya no existen' },
+        { status: 400 }
+      )
+    }
+
+    const resolvedItems = items.map((i, idx) => {
+      const data = productSnaps[idx].data()!
+      return {
+        productId:   i.product.id,
+        productName: String(data.name ?? ''),
+        price:       Number(data.price) || 0,
+        quantity:    i.quantity,
+        image:       Array.isArray(data.images) ? (data.images[0] ?? '') : '',
+        shortDesc:   String(data.shortDesc ?? data.name ?? ''),
+      }
+    })
+
     const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-    // ── Subtotal (siempre recalculado en el servidor) ──────────────
-    const subtotal = items.reduce(
-      (sum, i) => sum + i.product.price * i.quantity,
+    // ── Subtotal, siempre calculado con el precio real de Firestore ──
+    const subtotal = resolvedItems.reduce(
+      (sum, i) => sum + i.price * i.quantity,
       0
     )
 
     // ── Leer configuración de envío desde Firestore ────────────────
-    const settingsSnap = await getDoc(doc(db, 'settings', 'shipping'))
-    const settingsData = settingsSnap.exists() ? settingsSnap.data() : {}
+    const settingsSnap = await adminDb.collection('settings').doc('shipping').get()
+    const settingsData = settingsSnap.exists ? settingsSnap.data()! : {}
 
     const freeShippingThreshold =
       typeof settingsData.freeShippingMinimum === 'number'
@@ -92,15 +134,11 @@ export async function POST(req: NextRequest) {
 
     const total = subtotal + shipping
 
-    // ── Crear orden en Firestore ───────────────────────────────────
-    const orderRef = await addDoc(collection(db, 'orders'), {
+    // ── Crear orden en Firestore (Admin SDK: bypassea las security rules) ──
+    const orderRef = await adminDb.collection('orders').add({
       userId,
-      items: items.map(i => ({
-        productId:   i.product.id,
-        productName: i.product.name,
-        price:       Number(i.product.price),
-        quantity:    i.quantity,
-        image:       i.product.images?.[0] ?? '',
+      items: resolvedItems.map(({ productId, productName, price, quantity, image }) => ({
+        productId, productName, price, quantity, image,
       })),
       deliveryMethod,
       ...(deliveryMethod !== 'retiro' && shippingAddress ? { shippingAddress } : {}),
@@ -109,12 +147,12 @@ export async function POST(req: NextRequest) {
       shippingPending,
       total,
       status:    'pendiente',
-      createdAt: Timestamp.now(),
+      createdAt: FieldValue.serverTimestamp(),
     })
 
     const orderId = orderRef.id
 
-    // ── Armar items para Mercado Pago ──────────────────────────────
+    // ── Armar items para Mercado Pago con el precio ya revalidado ──
     const mpItems: {
       id:          string
       title:       string
@@ -122,13 +160,13 @@ export async function POST(req: NextRequest) {
       unit_price:  number
       currency_id: string
       description: string
-    }[] = items.map(({ product, quantity }) => ({
-      id:          product.id,
-      title:       product.name,
-      quantity:    Number(quantity),
-      unit_price:  Number(product.price),
+    }[] = resolvedItems.map(i => ({
+      id:          i.productId,
+      title:       i.productName,
+      quantity:    i.quantity,
+      unit_price:  i.price,
       currency_id: 'ARS',
-      description: product.shortDesc || product.name,
+      description: i.shortDesc,
     }))
 
     // Agregar envío como item solo si corresponde cobrarlo ahora

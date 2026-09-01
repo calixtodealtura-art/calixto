@@ -6,11 +6,12 @@ import {
   collection, getDocs, orderBy,
   query, doc, deleteDoc, updateDoc,
 } from 'firebase/firestore'
-import { db }          from '@/lib/firebase'
-import { formatPrice } from '@/lib/utils'
+import { db }             from '@/lib/firebase'
+import { normalizeCombo } from '@/lib/firestore'
+import { formatPrice }    from '@/lib/utils'
 import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
-import toast           from 'react-hot-toast'
-import type { Combo }  from '@/types'
+import toast              from 'react-hot-toast'
+import type { Combo }     from '@/types'
 
 export default function CombosPage() {
   const [combos,  setCombos]  = useState<Combo[]>([])
@@ -23,7 +24,7 @@ export default function CombosPage() {
       const snap = await getDocs(
         query(collection(db, 'combos'), orderBy('createdAt', 'desc'))
       )
-      setCombos(snap.docs.map(d => ({ ...d.data(), id: d.id }) as Combo))
+      setCombos(snap.docs.map(d => normalizeCombo(d.id, d.data())))
     } catch {
       toast.error('Error cargando combos')
     } finally {

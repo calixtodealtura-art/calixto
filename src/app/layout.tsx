@@ -5,11 +5,24 @@ import Header             from '@/components/layout/Header'
 import Footer             from '@/components/layout/Footer'
 import CartDrawer         from '@/components/cart/CartDrawer'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
+import JsonLd          from '@/components/seo/JsonLd'
 import './globals.css'
 import { GoogleAnalytics } from '@next/third-parties/google'
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type':    'Organization',
+  name:       'Calixto — Origen & Sabor',
+  url:        'https://calixto.ar',
+  logo:       'https://calixto.ar/logo-principal-verde.svg',
+  sameAs: [
+    'https://instagram.com/calixto',
+    'https://facebook.com/calixto',
+  ],
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://calixto.ar'), // 👈 reemplazá por tu dominio real
+  metadataBase: new URL('https://calixto.ar'),
   title:       'Calixto — Origen & Sabor',
   description: 'Aceites de oliva virgen extra, varietales, acetos, aceitunas y salsas artesanales de los Andes.',
   keywords:    ['aceite de oliva', 'virgen extra', 'Cuyo', 'gourmet', 'aceto', 'aceitunas'],
@@ -37,6 +50,8 @@ export const metadata: Metadata = {
   },
 }
 
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID
+
 export default function RootLayout({
   children,
 }: {
@@ -45,6 +60,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
+        <JsonLd data={organizationJsonLd} />
         <AuthProvider>
           <Header />
           <CartDrawer />
@@ -67,7 +83,7 @@ export default function RootLayout({
           <Footer />
         </AuthProvider>
       </body>
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
+      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   )
 }

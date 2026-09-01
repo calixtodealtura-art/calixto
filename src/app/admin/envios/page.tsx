@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Truck, Store, MapPin } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function EnviosPage() {
   const [minimo, setMinimo]                   = useState<number>(0)
@@ -30,6 +31,9 @@ export default function EnviosPage() {
           setInteriorMsg(data.interiorContactMessage ?? '')
           setInteriorLink(data.interiorContactLink ?? '')
         }
+      } catch (err) {
+        console.error(err)
+        toast.error('No se pudo cargar la configuración de envíos')
       } finally {
         setLoading(false)
       }
@@ -52,6 +56,9 @@ export default function EnviosPage() {
       }, { merge: true })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      console.error(err)
+      toast.error('No se pudo guardar la configuración')
     } finally {
       setSaving(false)
     }

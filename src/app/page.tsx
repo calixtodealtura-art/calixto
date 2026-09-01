@@ -2,7 +2,7 @@ export const revalidate = 300
 
 import Image          from 'next/image'
 import Link            from 'next/link'
-import { getProducts } from '@/lib/firestore'
+import { getProducts, getProductCountByCategory } from '@/lib/firestore'
 import ProductCard     from '@/components/product/ProductCard'
 import CalixtIcon      from '@/components/ui/CalixtIcon'
 import type { ProductCategory } from '@/types'
@@ -31,14 +31,18 @@ const STRIP_ITEMS = [
 ]
 
 export default async function HomePage() {
-  const [allProducts, featured] = await Promise.all([
-    getProducts().catch(() => []),
+  const [categoryCounts, featured] = await Promise.all([
+    Promise.all(
+      CATEGORY_CONFIG.map(cat =>
+        getProductCountByCategory(cat.slug).catch(() => 0)
+      )
+    ),
     getProducts({ featured: true, limitN: 8 }).catch(() => []),
   ])
 
-  const countByCategory = allProducts.reduce<Record<string, number>>(
-    (acc, product) => {
-      acc[product.category] = (acc[product.category] ?? 0) + 1
+  const countByCategory = CATEGORY_CONFIG.reduce<Record<string, number>>(
+    (acc, cat, i) => {
+      acc[cat.slug] = categoryCounts[i]
       return acc
     },
     {}
@@ -60,6 +64,7 @@ export default async function HomePage() {
           src="/imagenes/portada.png"
           alt=""
           fill
+          sizes="(min-width: 768px) 50vw, 100vw"
           className="object-cover object-center"
           priority
         />
@@ -174,6 +179,7 @@ export default async function HomePage() {
                     src={cat.image}
                     alt={cat.label}
                     fill
+                    sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, 50vw"
                     className="object-cover object-center transition-transform duration-500
                                group-hover:scale-105"
                   />

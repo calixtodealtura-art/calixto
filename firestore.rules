@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // ── Catálogo: lectura pública, escritura solo admin ────────────────────
+    match /products/{productId} {
+      allow read:          if true;
+      allow write, delete: if isAdmin();
+    }
+
+    match /combos/{comboId} {
+      allow read:          if true;
+      allow write, delete: if isAdmin();
+    }
+
+    // ── Configuración pública (envío, etc.) ─────────────────────────────────
+    match /settings/{settingId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Usuarios: cada uno lee/edita su propio perfil, nunca su propio rol ──
+    match /users/{userId} {
+      allow get:    if isOwner(userId) || isAdmin();
+      allow list:   if isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if (isOwner(userId) &&
+                          request.resource.data.role == resource.data.role) ||
+                        isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Órdenes: se crean solo server-side (Admin SDK bypassea estas rules).
+    //    El cliente puede leer las propias, y "reclamar" una orden de invitado
+    //    (userId: 'guest' → su uid) sin tocar ningún otro campo. El resto de
+    //    las actualizaciones (estado, pago, stock) son solo de admin.
+    match /orders/{orderId} {
+      allow create: if false;
+      allow get:    if isSignedIn() &&
+                        (resource.data.userId == request.auth.uid || isAdmin());
+      allow list:   if isAdmin() ||
+                        (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update: if isAdmin() ||
+                        (isSignedIn() &&
+                          resource.data.userId == 'guest' &&
+                          request.resource.data.userId == request.auth.uid &&
+                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userId']));
+      allow delete: if isAdmin();
+    }
+
+    // ── Mensajes de contacto: se crean solo server-side (vía /api/contacto) ──
+    match /contacts/{contactId} {
+      allow create:               if false;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── Movimientos de stock: solo admin ─────────────────────────────────────
+    match /stock_entries/{entryId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

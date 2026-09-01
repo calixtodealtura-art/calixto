@@ -53,6 +53,7 @@ export default function UsuariosPage() {
   const [users, setUsers]     = useState<RawUser[]>([])
   const [orders, setOrders]   = useState<RawOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(false)
 
   const [search, setSearch]           = useState('')
   const [activeStatuses, setActiveStatuses] = useState<string[]>(ALL_STATUSES)
@@ -85,6 +86,7 @@ export default function UsuariosPage() {
         setOrders(ordersData)
       } catch (err) {
         console.error(err)
+        setError(true)
       } finally {
         setLoading(false)
       }
@@ -203,6 +205,10 @@ export default function UsuariosPage() {
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-16 bg-cream-warm animate-pulse rounded" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-24 text-terra font-light">
+          No se pudieron cargar los usuarios. Recargá la página para reintentar.
         </div>
       ) : filteredRows.length === 0 ? (
         <div className="text-center py-24 text-green-olive font-light">
