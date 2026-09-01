@@ -5,56 +5,114 @@ import Link                            from 'next/link'
 import { collection, getDocs,
          orderBy, query, doc,
          deleteDoc }                   from 'firebase/firestore'
+import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { db }                          from '@/lib/firebase'
-import { normalizeProduct }            from '@/lib/firestore'
+import { normalizeProduct, getProductsPage } from '@/lib/firestore'
 import { formatPrice }                 from '@/lib/utils'
 import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 import toast                           from 'react-hot-toast'
+import LoadMoreButton                  from '@/components/ui/LoadMoreButton'
 import type { Product }                from '@/types'
 
-export default function AdminProductosPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [search,   setSearch]   = useState('')
+const PAGE_SIZE = 20
 
+export default function AdminProductosPage() {
+  // Vista paginada (sin búsqueda activa)
+  const [products, setProducts]       = useState<Product[]>([])
+  const [lastDoc, setLastDoc]         = useState<QueryDocumentSnapshot<DocumentData> | null>(null)
+  const [hasMore, setHasMore]         = useState(false)
+  const [loading, setLoading]         = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  // Búsqueda: trae el catálogo completo una sola vez (cacheado) para que
+  // busque sobre todo, no solo sobre lo ya paginado.
+  const [search, setSearch]               = useState('')
+  const [allProducts, setAllProducts]     = useState<Product[] | null>(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  // loading ya arranca en true (useState) — no hace falta volver a setearlo acá.
   useEffect(() => {
-    fetchProducts()
+    (async () => {
+      try {
+        const page = await getProductsPage({ limitN: PAGE_SIZE })
+        setProducts(page.items)
+        setLastDoc(page.lastDoc)
+        setHasMore(page.hasMore)
+      } catch (err) {
+        console.error(err)
+        toast.error('Error cargando productos')
+      } finally {
+        setLoading(false)
+      }
+    })()
   }, [])
 
-  async function fetchProducts() {
+  async function handleLoadMore() {
+    if (!lastDoc) return
+    setLoadingMore(true)
     try {
-      const snap = await getDocs(
-        query(collection(db, 'products'), orderBy('createdAt', 'desc'))
-      )
-      setProducts(snap.docs.map(d => normalizeProduct(d.id, d.data())))
+      const page = await getProductsPage({ limitN: PAGE_SIZE, startAfterDoc: lastDoc })
+      setProducts(prev => [...prev, ...page.items])
+      setLastDoc(page.lastDoc)
+      setHasMore(page.hasMore)
     } catch (err) {
       console.error(err)
-      toast.error('Error cargando productos')
+      toast.error('Error cargando más productos')
     } finally {
-      setLoading(false)
+      setLoadingMore(false)
     }
   }
+
+  useEffect(() => {
+    if (!search || allProducts) return
+    let active = true
+
+    async function fetchAll() {
+      setSearchLoading(true)
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'products'), orderBy('createdAt', 'desc'))
+        )
+        if (active) setAllProducts(snap.docs.map(d => normalizeProduct(d.id, d.data())))
+      } catch (err) {
+        console.error(err)
+        if (active) toast.error('No se pudo cargar el catálogo completo para buscar')
+      } finally {
+        if (active) setSearchLoading(false)
+      }
+    }
+    fetchAll()
+    return () => { active = false }
+  }, [search, allProducts])
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
     try {
       await deleteDoc(doc(db, 'products', id))
       setProducts(prev => prev.filter(p => p.id !== id))
+      setAllProducts(prev => prev ? prev.filter(p => p.id !== id) : prev)
       toast.success('Producto eliminado')
     } catch {
       toast.error('No se pudo eliminar')
     }
   }
 
+  const isSearching = search.trim().length > 0
+  const sourceList   = isSearching ? (allProducts ?? []) : products
+
   // Filtrar por nombre, categoría o badge
-  const filtered = products.filter(p => {
-    const q = search.toLowerCase()
-    return (
-      p.name.toLowerCase().includes(q)     ||
-      p.category.toLowerCase().includes(q) ||
-      (p.badge ?? '').toLowerCase().includes(q)
-    )
-  })
+  const filtered = isSearching
+    ? sourceList.filter(p => {
+        const q = search.toLowerCase()
+        return (
+          p.name.toLowerCase().includes(q)     ||
+          p.category.toLowerCase().includes(q) ||
+          (p.badge ?? '').toLowerCase().includes(q)
+        )
+      })
+    : sourceList
+
+  const showSkeleton = loading || (isSearching && searchLoading && !allProducts)
 
   return (
     <div className="p-8">
@@ -100,7 +158,7 @@ export default function AdminProductosPage() {
         )}
       </div>
 
-      {loading ? (
+      {showSkeleton ? (
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-14 bg-cream-warm animate-pulse" />
@@ -108,8 +166,8 @@ export default function AdminProductosPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-24 text-green-olive font-light">
-          {search
-            ? <>No se encontraron productos para <strong>"{search}"</strong></>
+          {isSearching
+            ? <>No se encontraron productos para <strong>&quot;{search}&quot;</strong></>
             : <>No hay productos todavía.{' '}
                 <Link href="/admin/productos/nuevo" className="underline">Crear el primero</Link>
               </>
@@ -118,9 +176,9 @@ export default function AdminProductosPage() {
       ) : (
         <>
           {/* Contador */}
-          {search && (
+          {isSearching && (
             <p className="text-[11px] text-gray-400 font-light mb-3">
-              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''} para "{search}"
+              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''} para &quot;{search}&quot;
             </p>
           )}
 
@@ -194,9 +252,13 @@ export default function AdminProductosPage() {
             ))}
           </div>
 
-          <p className="text-[11px] text-gray-400 font-light mt-3 text-right">
-            {filtered.length} de {products.length} productos
-          </p>
+          {!isSearching && (
+            <p className="text-[11px] text-gray-400 font-light mt-3 text-right">
+              {products.length} producto{products.length !== 1 ? 's' : ''} cargados
+            </p>
+          )}
+
+          <LoadMoreButton onClick={handleLoadMore} loading={loadingMore} hidden={isSearching || !hasMore} />
         </>
       )}
     </div>

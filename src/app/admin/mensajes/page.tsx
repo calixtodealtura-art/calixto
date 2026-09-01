@@ -34,25 +34,23 @@ export default function MensajesPage() {
   const [filter,    setFilter]    = useState<'todos' | 'no-leidos' | 'leidos'>('todos')
 
   useEffect(() => {
-    fetchMessages()
+    (async () => {
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'contacts'), orderBy('createdAt', 'desc'))
+        )
+        setMessages(snap.docs.map(d => ({
+          ...d.data(),
+          id:        d.id,
+          createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
+        })) as ContactMessage[])
+      } catch {
+        toast.error('Error cargando mensajes')
+      } finally {
+        setLoading(false)
+      }
+    })()
   }, [])
-
-  async function fetchMessages() {
-    try {
-      const snap = await getDocs(
-        query(collection(db, 'contacts'), orderBy('createdAt', 'desc'))
-      )
-      setMessages(snap.docs.map(d => ({
-        ...d.data(),
-        id:        d.id,
-        createdAt: d.data().createdAt?.toDate?.() ?? new Date(),
-      })) as ContactMessage[])
-    } catch {
-      toast.error('Error cargando mensajes')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   async function handleToggleRead(id: string, currentRead: boolean) {
     try {

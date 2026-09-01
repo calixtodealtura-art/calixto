@@ -28,9 +28,7 @@ export default function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  const [cartCount, setCartCount] = useState(0)
   const itemCount = useCartStore(s => s.itemCount())
-  useEffect(() => { setCartCount(itemCount) }, [itemCount])
 
   const openCart = useCartStore(s => s.openCart)
   const { user, role } = useAuthStore()
@@ -193,11 +191,11 @@ export default function Header() {
               className="relative text-green-deep hover:text-orange transition-colors"
             >
               <ShoppingBag size={19} strokeWidth={1.5} />
-              {cartCount > 0 && (
+              {itemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-orange text-cream
                                  text-[9px] font-semibold w-4 h-4 rounded-full
                                  flex items-center justify-center">
-                  {cartCount}
+                  {itemCount}
                 </span>
               )}
             </button>

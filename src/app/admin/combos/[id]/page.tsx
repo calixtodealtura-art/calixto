@@ -2,26 +2,14 @@
 
 import { useEffect, useState }   from 'react'
 import { useRouter, useParams }  from 'next/navigation'
-import {
-  collection, getDocs, orderBy, query,
-  doc, getDoc, addDoc, updateDoc, Timestamp,
-} from 'firebase/firestore'
-import { db }          from '@/lib/firebase'
-import { normalizeProduct, normalizeCombo } from '@/lib/firestore'
-import { formatPrice, slugify } from '@/lib/utils'
-import { Plus, Trash2, Search } from 'lucide-react'
-import toast           from 'react-hot-toast'
-import type { Product, ComboItem } from '@/types'
-
-const EMPTY_COMBO = {
-  name:        '',
-  slug:        '',
-  description: '',
-  comboPrice:  0,
-  badge:       '',
-  featured:    false,
-  active:      true,
-}
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { db }            from '@/lib/firebase'
+import { normalizeProduct } from '@/lib/firestore'
+import { useComboForm }  from '@/hooks/useComboForm'
+import ComboProductPicker from '@/components/admin/ComboProductPicker'
+import ComboItemsList     from '@/components/admin/ComboItemsList'
+import { formatPrice }   from '@/lib/utils'
+import type { Product }  from '@/types'
 
 export default function ComboFormPage() {
   const router = useRouter()
@@ -29,14 +17,9 @@ export default function ComboFormPage() {
   const id     = params.id as string
   const isNew  = id === 'nuevo'
 
-  const [form,       setForm]       = useState(EMPTY_COMBO)
-  const [items,      setItems]      = useState<ComboItem[]>([])
-  const [products,   setProducts]   = useState<Product[]>([])
-  const [search,     setSearch]     = useState('')
-  const [loading,    setLoading]    = useState(!isNew)
-  const [saving,     setSaving]     = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
 
-  // Cargar todos los productos disponibles
+  // Cargar todos los productos disponibles para el buscador
   useEffect(() => {
     async function fetchProducts() {
       const snap = await getDocs(
@@ -47,123 +30,12 @@ export default function ComboFormPage() {
     fetchProducts()
   }, [])
 
-  // Cargar combo existente si es edición
-  useEffect(() => {
-    if (isNew) return
-    async function loadCombo() {
-      try {
-        const snap = await getDoc(doc(db, 'combos', id))
-        if (!snap.exists()) { toast.error('Combo no encontrado'); router.push('/admin/combos'); return }
-        const data = normalizeCombo(snap.id, snap.data())
-        setForm({
-          name:        data.name,
-          slug:        data.slug,
-          description: data.description,
-          comboPrice:  data.comboPrice,
-          badge:       data.badge ?? '',
-          featured:    data.featured,
-          active:      data.active,
-        })
-        setItems(data.items)
-      } catch (err) {
-        console.error(err)
-        toast.error('Error cargando el combo')
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadCombo()
-  }, [id, isNew, router])
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    const { name, value, type } = e.target
-    const val = type === 'checkbox'
-      ? (e.target as HTMLInputElement).checked
-      : type === 'number' ? Number(value) : value
-
-    setForm(prev => {
-      const updated = { ...prev, [name]: val }
-      if (name === 'name') updated.slug = slugify(value)
-      return updated
-    })
-  }
-
-  // Agregar producto al combo
-  function addProduct(product: Product) {
-    const existing = items.find(i => i.productId === product.id)
-    if (existing) {
-      setItems(prev => prev.map(i =>
-        i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i
-      ))
-    } else {
-      setItems(prev => [...prev, {
-        productId:   product.id,
-        productName: product.name,
-        quantity:    1,
-        unitPrice:   product.price,
-      }])
-    }
-    setSearch('')
-  }
-
-  function updateQty(productId: string, qty: number) {
-    if (qty <= 0) {
-      setItems(prev => prev.filter(i => i.productId !== productId))
-    } else {
-      setItems(prev => prev.map(i =>
-        i.productId === productId ? { ...i, quantity: qty } : i
-      ))
-    }
-  }
-
-  function removeItem(productId: string) {
-    setItems(prev => prev.filter(i => i.productId !== productId))
-  }
-
-  // Cálculos derivados
-  const fullPrice = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
-  const savings   = fullPrice - form.comboPrice
-  const savingsPct = fullPrice > 0 ? Math.round((savings / fullPrice) * 100) : 0
-
-  // Productos filtrados por búsqueda (excluye los ya agregados)
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) &&
-    !items.find(i => i.productId === p.id)
-  )
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (items.length < 2) { toast.error('El combo debe tener al menos 2 productos'); return }
-    if (form.comboPrice <= 0) { toast.error('El precio del combo debe ser mayor a 0'); return }
-    if (savings < 0) { toast.error('El precio del combo no puede ser mayor al precio individual'); return }
-
-    setSaving(true)
-    try {
-      const comboData = {
-        ...form,
-        items,
-        fullPrice,
-        savings,
-        images: [],
-      }
-
-      if (isNew) {
-        await addDoc(collection(db, 'combos'), {
-          ...comboData,
-          createdAt: Timestamp.now(),
-        })
-        toast.success('Combo creado')
-      } else {
-        await updateDoc(doc(db, 'combos', id), comboData)
-        toast.success('Combo actualizado')
-      }
-      router.push('/admin/combos')
-    } catch {
-      toast.error('Error al guardar')
-    } finally {
-      setSaving(false)
-    }
-  }
+  const {
+    form, handleChange,
+    items, addProduct, updateQty, removeItem,
+    fullPrice, savings, savingsPct,
+    loading, saving, handleSubmit,
+  } = useComboForm(id, isNew)
 
   if (loading) {
     return (
@@ -239,117 +111,13 @@ export default function ComboFormPage() {
                 Productos del combo *
               </p>
 
-              {/* Buscador */}
-              <div className="relative mb-3">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Buscar producto para agregar…"
-                  className={`${inputCls} pl-9`}
-                />
-              </div>
+              <ComboProductPicker
+                products={products}
+                excludeIds={items.map(i => i.productId)}
+                onSelect={addProduct}
+              />
 
-              {/* Resultados de búsqueda */}
-              {search && filteredProducts.length > 0 && (
-                <div className="border border-cream-warm bg-white mb-3 max-h-48 overflow-y-auto">
-                  {filteredProducts.slice(0, 8).map(product => (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => addProduct(product)}
-                      className="w-full flex items-center justify-between px-4 py-3
-                                 hover:bg-cream/50 transition-colors border-b border-cream-warm
-                                 last:border-0 text-left"
-                    >
-                      <div>
-                        <p className="text-sm text-green-deep font-light">{product.name}</p>
-                        <p className="text-[11px] text-gray-400">{product.category}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-serif text-sm text-green-deep">
-                          {formatPrice(product.price)}
-                        </span>
-                        <span className="text-green-olive">
-                          <Plus size={14} />
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {search && filteredProducts.length === 0 && (
-                <p className="text-sm text-gray-400 font-light mb-3 px-1">
-                  No se encontraron productos
-                </p>
-              )}
-
-              {/* Items seleccionados */}
-              {items.length === 0 ? (
-                <div className="border-2 border-dashed border-cream-warm p-8 text-center">
-                  <p className="text-sm text-gray-400 font-light">
-                    Buscá productos arriba para agregarlos al combo
-                  </p>
-                </div>
-              ) : (
-                <div className="border border-cream-warm bg-white">
-                  {items.map((item, idx) => (
-                    <div
-                      key={item.productId}
-                      className={`flex items-center gap-4 px-4 py-3
-                                  border-b border-cream-warm last:border-0
-                                  ${idx % 2 === 0 ? 'bg-white' : 'bg-cream/20'}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-green-deep font-light truncate">
-                          {item.productName}
-                        </p>
-                        <p className="text-[11px] text-gray-400">
-                          {formatPrice(item.unitPrice)} c/u
-                        </p>
-                      </div>
-
-                      {/* Cantidad */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => updateQty(item.productId, item.quantity - 1)}
-                          className="w-7 h-7 bg-cream hover:bg-gold-light transition-colors
-                                     flex items-center justify-center text-green-deep"
-                        >
-                          −
-                        </button>
-                        <span className="w-8 text-center text-sm font-medium text-green-deep">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => updateQty(item.productId, item.quantity + 1)}
-                          className="w-7 h-7 bg-cream hover:bg-gold-light transition-colors
-                                     flex items-center justify-center text-green-deep"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      {/* Subtotal */}
-                      <span className="font-serif text-sm font-semibold text-green-deep w-20 text-right">
-                        {formatPrice(item.unitPrice * item.quantity)}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.productId)}
-                        className="text-gray-300 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 size={14} strokeWidth={1.5} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ComboItemsList items={items} onUpdateQty={updateQty} onRemove={removeItem} />
             </div>
           </div>
 

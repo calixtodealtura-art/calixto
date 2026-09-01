@@ -6,8 +6,11 @@ import {
   where,
   orderBy,
   limit,
+  startAfter,
   Timestamp,
   type QueryConstraint,
+  type QueryDocumentSnapshot,
+  type DocumentData,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import type { Product, Order, Combo, ProductCategory } from '@/types'
@@ -63,6 +66,29 @@ export async function getProducts(opts?: {
 
   const snap = await getDocs(query(collection(db, PRODUCTS_COL), ...constraints))
   return snap.docs.map(d => normalizeProduct(d.id, d.data()))
+}
+
+interface Page<T> {
+  items:   T[]
+  lastDoc: QueryDocumentSnapshot<DocumentData> | null
+  hasMore: boolean
+}
+
+// Página de productos ordenada por fecha de creación, con cursor — para
+// listas admin que no necesitan traer la colección entera de una.
+export async function getProductsPage(opts: {
+  limitN:         number
+  startAfterDoc?: QueryDocumentSnapshot<DocumentData>
+}): Promise<Page<Product>> {
+  const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc'), limit(opts.limitN)]
+  if (opts.startAfterDoc) constraints.push(startAfter(opts.startAfterDoc))
+
+  const snap = await getDocs(query(collection(db, PRODUCTS_COL), ...constraints))
+  return {
+    items:   snap.docs.map(d => normalizeProduct(d.id, d.data())),
+    lastDoc: snap.docs[snap.docs.length - 1] ?? null,
+    hasMore: snap.docs.length === opts.limitN,
+  }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -121,13 +147,21 @@ export async function getComboBySlug(slug: string): Promise<Combo | null> {
 // ── Órdenes ────────────────────────────────────────────────────────────────
 const ORDERS_COL = 'orders'
 
-export async function getOrdersByUser(userId: string): Promise<Order[]> {
-  const snap = await getDocs(
-    query(
-      collection(db, ORDERS_COL),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
-    )
-  )
-  return snap.docs.map(d => normalizeOrder(d.id, d.data()))
+export async function getOrdersByUser(userId: string, opts?: {
+  limitN?:        number
+  startAfterDoc?: QueryDocumentSnapshot<DocumentData>
+}): Promise<Page<Order>> {
+  const constraints: QueryConstraint[] = [
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+  ]
+  if (opts?.limitN)        constraints.push(limit(opts.limitN))
+  if (opts?.startAfterDoc) constraints.push(startAfter(opts.startAfterDoc))
+
+  const snap = await getDocs(query(collection(db, ORDERS_COL), ...constraints))
+  return {
+    items:   snap.docs.map(d => normalizeOrder(d.id, d.data())),
+    lastDoc: snap.docs[snap.docs.length - 1] ?? null,
+    hasMore: opts?.limitN ? snap.docs.length === opts.limitN : false,
+  }
 }

@@ -17,20 +17,20 @@ export default function CombosPage() {
   const [combos,  setCombos]  = useState<Combo[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { fetchCombos() }, [])
-
-  async function fetchCombos() {
-    try {
-      const snap = await getDocs(
-        query(collection(db, 'combos'), orderBy('createdAt', 'desc'))
-      )
-      setCombos(snap.docs.map(d => normalizeCombo(d.id, d.data())))
-    } catch {
-      toast.error('Error cargando combos')
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDocs(
+          query(collection(db, 'combos'), orderBy('createdAt', 'desc'))
+        )
+        setCombos(snap.docs.map(d => normalizeCombo(d.id, d.data())))
+      } catch {
+        toast.error('Error cargando combos')
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
 
   async function handleToggleActive(id: string, current: boolean) {
     try {

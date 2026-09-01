@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore'
 import { getOrdersByUser } from '@/lib/firestore'
 import { useAuthStore } from '@/store/authStore'
 import { formatPrice } from '@/lib/utils'
 import { DELIVERY_METHOD_LABELS } from '@/types'
 import type { Order } from '@/types'
+import LoadMoreButton from '@/components/ui/LoadMoreButton'
+
+const PAGE_SIZE = 10
 
 const STATUS_LABELS: Record<string, string> = {
   pendiente:   'Pendiente de pago',
@@ -34,10 +38,13 @@ export default function MisPedidosClient() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuthStore()
 
-  const [orders, setOrders]     = useState<Order[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState(false)
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [orders, setOrders]         = useState<Order[]>([])
+  const [lastDoc, setLastDoc]       = useState<QueryDocumentSnapshot<DocumentData> | null>(null)
+  const [hasMore, setHasMore]       = useState(false)
+  const [loading, setLoading]       = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError]           = useState(false)
+  const [expanded, setExpanded]     = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -49,8 +56,10 @@ export default function MisPedidosClient() {
 
     async function fetchOrders() {
       try {
-        const data = await getOrdersByUser(user!.uid)
-        setOrders(data)
+        const page = await getOrdersByUser(user!.uid, { limitN: PAGE_SIZE })
+        setOrders(page.items)
+        setLastDoc(page.lastDoc)
+        setHasMore(page.hasMore)
       } catch (err) {
         console.error(err)
         setError(true)
@@ -60,6 +69,21 @@ export default function MisPedidosClient() {
     }
     fetchOrders()
   }, [user, authLoading, router])
+
+  async function handleLoadMore() {
+    if (!user || !lastDoc) return
+    setLoadingMore(true)
+    try {
+      const page = await getOrdersByUser(user.uid, { limitN: PAGE_SIZE, startAfterDoc: lastDoc })
+      setOrders(prev => [...prev, ...page.items])
+      setLastDoc(page.lastDoc)
+      setHasMore(page.hasMore)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   if (authLoading || loading) {
     return (
@@ -159,6 +183,8 @@ export default function MisPedidosClient() {
             ))}
           </div>
         )}
+
+        <LoadMoreButton onClick={handleLoadMore} loading={loadingMore} hidden={!hasMore} />
       </div>
     </div>
   )

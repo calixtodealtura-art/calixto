@@ -5,6 +5,14 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { formatPrice } from '@/lib/utils'
 import { Search } from 'lucide-react'
+import LoadMoreButton from '@/components/ui/LoadMoreButton'
+
+// Acá no se pagina la consulta a Firestore: total gastado y cantidad de
+// compras se calculan cruzando TODAS las órdenes de TODOS los usuarios, así
+// que traer menos usuarios no reduce el fetch caro (las órdenes), y "ordenar
+// por total gastado" dejaría de tener sentido si no están todos cargados.
+// Lo que sí se pagina es el renderizado: la tabla solo pinta de a tandas.
+const VISIBLE_PAGE_SIZE = 25
 
 interface RawUser {
   uid:         string
@@ -58,6 +66,7 @@ export default function UsuariosPage() {
   const [search, setSearch]           = useState('')
   const [activeStatuses, setActiveStatuses] = useState<string[]>(ALL_STATUSES)
   const [sortKey, setSortKey]         = useState<SortKey>('total_desc')
+  const [visibleCount, setVisibleCount] = useState(VISIBLE_PAGE_SIZE)
 
   useEffect(() => {
     async function fetchData() {
@@ -145,6 +154,18 @@ export default function UsuariosPage() {
     )
   }, [rows, search, sortKey])
 
+  // Cada vez que cambia búsqueda/orden/filtro, volvemos a mostrar solo la
+  // primera tanda. Ajustamos el estado durante el render (patrón oficial de
+  // React para esto) en vez de un efecto, así no hay un render extra de por medio.
+  const filterKey = `${search}|${sortKey}|${activeStatuses.join(',')}`
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey)
+    setVisibleCount(VISIBLE_PAGE_SIZE)
+  }
+
+  const visibleRows = filteredRows.slice(0, visibleCount)
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -226,7 +247,7 @@ export default function UsuariosPage() {
             <span>Última compra</span>
           </div>
 
-          {filteredRows.map(row => (
+          {visibleRows.map(row => (
             <div
               key={row.uid}
               className="grid grid-cols-[1fr_130px_130px_150px_130px] gap-4 px-5 py-4
@@ -256,8 +277,18 @@ export default function UsuariosPage() {
               </span>
             </div>
           ))}
+
+          <p className="text-[11px] text-gray-400 font-light px-5 py-3 border-t border-cream-warm">
+            Mostrando {visibleRows.length} de {filteredRows.length} usuario{filteredRows.length !== 1 ? 's' : ''}
+          </p>
         </div>
       )}
+
+      <LoadMoreButton
+        onClick={() => setVisibleCount(c => c + VISIBLE_PAGE_SIZE)}
+        loading={false}
+        hidden={loading || !!error || visibleCount >= filteredRows.length}
+      />
     </div>
   )
 }
