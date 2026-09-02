@@ -84,6 +84,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
               onClick={handleAddToCart}
               disabled={product.stock === 0}
               aria-label={`Agregar ${product.name} al carrito`}
+              title="Agregar al carrito"
               className="w-10 h-10 bg-green-deep text-cream flex items-center justify-center
                          transition-all duration-200
                          hover:bg-gold hover:text-green-deep hover:scale-105

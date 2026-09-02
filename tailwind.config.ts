@@ -48,6 +48,7 @@ const config: Config = {
         'float':     'float 4s ease-in-out infinite',
         'fade-up':   'fadeUp 0.6s ease both',
         'spin-slow': 'spin 20s linear infinite',
+        'bump':      'bump 2.4s ease-in-out infinite',
       },
       keyframes: {
         float: {
@@ -57,6 +58,10 @@ const config: Config = {
         fadeUp: {
           from: { opacity: '0', transform: 'translateY(24px)' },
           to:   { opacity: '1', transform: 'translateY(0)' },
+        },
+        bump: {
+          '0%, 100%': { transform: 'translateY(0) scale(1)' },
+          '50%':      { transform: 'translateY(-5px) scale(1.05)' },
         },
       },
     },

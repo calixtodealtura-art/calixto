@@ -12,7 +12,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type':    'Organization',
-  name:       'Calixto — Origen & Sabor',
+  name:       'Calixto — Sabores de Altura',
   url:        'https://calixto.ar',
   logo:       'https://calixto.ar/logo-principal-verde.svg',
   sameAs: [
@@ -23,28 +23,28 @@ const organizationJsonLd = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://calixto.ar'),
-  title:       'Calixto — Origen & Sabor',
+  title:       'Calixto — Sabores de Altura',
   description: 'Aceites de oliva virgen extra, varietales, acetos, aceitunas y salsas artesanales de los Andes.',
   keywords:    ['aceite de oliva', 'virgen extra', 'Cuyo', 'gourmet', 'aceto', 'aceitunas'],
   openGraph: {
-    title:       'Calixto — Origen & Sabor',
+    title:       'Calixto — Sabores de Altura',
     description: 'Productos gourmet de nuestros olivares de altura en Cuyo, Argentina.',
     type:        'website',
     url:         '/',
-    siteName:    'Calixto — Origen & Sabor',
+    siteName:    'Calixto — Sabores de Altura',
     images: [
       {
         url:    '/og-default.png', // 👈 imagen genérica del sitio, poné el archivo en /public
         width:  1200,
         height: 630,
-        alt:    'Calixto — Origen & Sabor',
+        alt:    'Calixto — Sabores de Altura',
       },
     ],
     locale: 'es_AR',
   },
   twitter: {
     card:        'summary_large_image',
-    title:       'Calixto — Origen & Sabor',
+    title:       'Calixto — Sabores de Altura',
     description: 'Productos gourmet de nuestros olivares de altura en Cuyo, Argentina.',
     images:      ['/og-default.png'],
   },

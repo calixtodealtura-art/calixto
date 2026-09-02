@@ -17,7 +17,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
   const title = category
     ? `${CATEGORY_LABELS[category]} | Calixto`
-    : 'Catálogo completo | Calixto — Origen & Sabor'
+    : 'Catálogo completo | Calixto — Sabores de Altura'
 
   const description = category
     ? `Descubrí nuestra selección de ${CATEGORY_LABELS[category].toLowerCase()} artesanales de la región de Cuyo, Argentina.`

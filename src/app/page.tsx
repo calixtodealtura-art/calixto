@@ -162,7 +162,7 @@ export default async function HomePage() {
           {/* Grilla adaptable según cantidad de categorías activas */}
           <div className={`grid gap-5 ${
             activeCategories.length === 1 ? 'grid-cols-1 max-w-sm mx-auto'         :
-            activeCategories.length === 2 ? 'grid-cols-2 max-w-xl mx-auto'         :
+            activeCategories.length === 2 ? 'grid-cols-1 sm:grid-cols-2'           :
             activeCategories.length === 3 ? 'grid-cols-3'                          :
             activeCategories.length === 4 ? 'grid-cols-2 md:grid-cols-4'           :
             'grid-cols-2 md:grid-cols-3 lg:grid-cols-5'
@@ -173,13 +173,17 @@ export default async function HomePage() {
                 <Link
                   key={cat.slug}
                   href={`/productos?categoria=${cat.slug}`}
-                  className="group relative aspect-[3/4] overflow-hidden"
+                  className={`group relative overflow-hidden ${
+                    activeCategories.length === 2 ? 'aspect-[16/10]' : 'aspect-[3/4]'
+                  }`}
                 >
                   <Image
                     src={cat.image}
                     alt={cat.label}
                     fill
-                    sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, 50vw"
+                    sizes={activeCategories.length === 2
+                      ? '(min-width: 640px) 50vw, 100vw'
+                      : '(min-width: 1024px) 20vw, (min-width: 768px) 25vw, 50vw'}
                     className="object-cover object-center transition-transform duration-500
                                group-hover:scale-105"
                   />
@@ -188,8 +192,16 @@ export default async function HomePage() {
                     className="absolute inset-0"
                     style={{ background: 'linear-gradient(to top, rgba(26,46,26,0.85) 0%, transparent 60%)' }}
                   />
-                  <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                    <p className="font-serif text-[1.2rem]" style={{ color: '#fff0dc' }}>
+                  <div className={`absolute bottom-0 left-0 right-0 z-10 ${
+                    activeCategories.length === 2 ? 'p-8' : 'p-5'
+                  }`}>
+                    <p
+                      className="font-serif"
+                      style={{
+                        color: '#fff0dc',
+                        fontSize: activeCategories.length === 2 ? 'clamp(1.5rem, 3vw, 2.2rem)' : '1.2rem',
+                      }}
+                    >
                       {cat.label}
                     </p>
                     <p
@@ -207,7 +219,10 @@ export default async function HomePage() {
       )}
 
       {/* ── PRODUCTOS DESTACADOS ──────────────────────────────────────── */}
-      <section className="px-8 md:px-20 py-20" style={{ backgroundColor: '#fff0dc' }}>
+      <section
+        className="px-8 md:px-20 py-20 border-t"
+        style={{ backgroundColor: '#fff0dc', borderColor: 'rgba(24,83,44,0.1)' }}
+      >
         <div className="flex items-end justify-between mb-12">
           <div>
             <p className="section-label">Productos destacados</p>

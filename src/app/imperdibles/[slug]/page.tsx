@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title:    combo.name,
       description,
       url:      `https://calixto.ar/imperdibles/${slug}`,
-      siteName: 'Calixto — Origen & Sabor',
+      siteName: 'Calixto — Sabores de Altura',
       images: [
         {
           url:    imageUrl,

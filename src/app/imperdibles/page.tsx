@@ -1,7 +1,8 @@
 import type { Metadata }  from 'next'
 import Link              from 'next/link'
 import Image             from 'next/image'
-import { getCombos }     from '@/lib/firestore'
+import { getCombos, getProducts } from '@/lib/firestore'
+import ProductCard       from '@/components/product/ProductCard'
 import { formatPrice }   from '@/lib/utils'
 
 export const revalidate = 60
@@ -16,6 +17,9 @@ export const metadata: Metadata = {
 
 export default async function CombosPage() {
   const combos = await getCombos().catch(() => [])
+  const featured = combos.length === 0
+    ? await getProducts({ featured: true, limitN: 8 }).catch(() => [])
+    : []
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -49,16 +53,26 @@ export default async function CombosPage() {
       {/* Grid de combos */}
       <section className="max-w-screen-xl mx-auto px-8 md:px-20 py-16">
         {combos.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="font-serif text-2xl text-green-olive mb-3">
-              Próximamente nuevos combos
-            </p>
-            <p className="text-sm text-gray-400 font-light mb-8">
-              Estamos preparando selecciones especiales para vos.
-            </p>
-            <Link href="/productos" className="btn-primary">
-              Ver productos individuales
-            </Link>
+          <div>
+            <div className="text-center py-16">
+              <p className="font-serif text-2xl text-green-olive mb-3">
+                Próximamente nuevos combos
+              </p>
+              <p className="text-sm text-gray-400 font-light mb-8">
+                Mientras tanto, mirá lo mejor de nuestro catálogo.
+              </p>
+              <Link href="/productos" className="btn-primary">
+                Ver todos los productos
+              </Link>
+            </div>
+
+            {featured.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 pt-8">
+                {featured.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

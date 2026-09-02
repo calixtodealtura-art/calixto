@@ -3,7 +3,7 @@ import LogoPrincipal from '@/components/ui/LogoPrincipal'
 import Image          from 'next/image'
 
 export const metadata: Metadata = {
-  title: 'Nosotros | Calixto — Origen & Sabor',
+  title: 'Nosotros | Calixto — Sabores de Altura',
   description: 'Calixto conecta productores de la región de Cuyo con consumidores que valoran el origen, la calidad y la identidad de cada producto.',
   alternates: {
     canonical: '/nosotros',

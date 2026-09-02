@@ -1,8 +1,9 @@
 import { notFound }          from 'next/navigation'
 import { Metadata }          from 'next'
-import { getProductBySlug }   from '@/lib/firestore'
+import { getProductBySlug, getProducts } from '@/lib/firestore'
 import AddToCartButton        from '@/components/product/AddToCartButton'
 import ProductGallery         from '@/components/product/ProductGallery'
+import ProductCard            from '@/components/product/ProductCard'
 import JsonLd                 from '@/components/seo/JsonLd'
 import { formatPrice }        from '@/lib/utils'
 
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: product.name,
       description,
       url: `https://calixto.ar/producto/${slug}`,
-      siteName: 'Calixto — Origen & Sabor',
+      siteName: 'Calixto — Sabores de Altura',
       images: [
         {
           url: imageUrl,
@@ -67,6 +68,10 @@ export default async function ProductPage({ params }: Props) {
   const product   = await getProductBySlug(slug).catch(() => null)
 
   if (!product) notFound()
+
+  const related = (await getProducts({ category: product.category, limitN: 5 }).catch(() => []))
+    .filter(p => p.id !== product.id)
+    .slice(0, 4)
 
   const productJsonLd = {
     '@context':    'https://schema.org',
@@ -162,6 +167,20 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {related.length > 0 && (
+        <div className="max-w-screen-xl mx-auto px-8 md:px-20 pb-20 pt-4 border-t border-cream-warm">
+          <p className="section-label mt-16">También te puede interesar</p>
+          <h2 className="section-title mb-10">
+            Seguí <em className="not-italic text-gold-light">descubriendo</em>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+            {related.map(p => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
