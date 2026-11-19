@@ -20,7 +20,7 @@ export default function NosotrosPage() {
         style={{ backgroundColor: '#18532c' }}
       >
         <Image
-                  src="/imagenes/portada2.png"
+                  src="/imagenes/portada2.webp"
                   alt=""
                   fill
                   sizes="100vw"
@@ -89,7 +89,7 @@ export default function NosotrosPage() {
             className="relative flex items-center justify-center aspect-square max-w-sm mx-auto w-full overflow-hidden"
           >
             <Image
-              src="/imagenes/portada.png"
+              src="/imagenes/portada.webp"
               alt=""
               fill
               sizes="384px"

@@ -14,11 +14,11 @@ const CATEGORY_CONFIG: {
   bg:       string
   image:    string
 }[] = [
-  { slug: 'aceites',    label: 'Aceites de Oliva',  sublabel: 'Virgen extra · Primera prensada', bg: 'from-green-mid to-green-olive', image: '/imagenes/aceite.png'     },
-  { slug: 'varietales', label: 'Varietales',         sublabel: 'Monovarietales seleccionados',    bg: 'from-[#1a4a28] to-[#3d6b35]',  image: '/imagenes/aceite.png'     },
-  { slug: 'acetos',     label: 'Acetos',             sublabel: 'Añejados artesanalmente',         bg: 'from-[#5a1a0a] to-[#8f2412]',  image: '/imagenes/aceite.png'     },
-  { slug: 'aceitunas',  label: 'Aceitunas',          sublabel: 'Marinadas y al natural',          bg: 'from-green-deep to-green-mid',  image: '/imagenes/aceituna.png'   },
-  { slug: 'especiales', label: 'Especiales Gourmet', sublabel: 'Con base de aceite de oliva',     bg: 'from-[#4a2800] to-[#8b5e3c]',  image: '/imagenes/especiales.png' },
+  { slug: 'aceites',    label: 'Aceites de Oliva',  sublabel: 'Virgen extra · Primera prensada', bg: 'from-green-mid to-green-olive', image: '/imagenes/aceite.webp'     },
+  { slug: 'varietales', label: 'Varietales',         sublabel: 'Monovarietales seleccionados',    bg: 'from-[#1a4a28] to-[#3d6b35]',  image: '/imagenes/aceite.webp'     },
+  { slug: 'acetos',     label: 'Acetos',             sublabel: 'Añejados artesanalmente',         bg: 'from-[#5a1a0a] to-[#8f2412]',  image: '/imagenes/aceite.webp'     },
+  { slug: 'aceitunas',  label: 'Aceitunas',          sublabel: 'Marinadas y al natural',          bg: 'from-green-deep to-green-mid',  image: '/imagenes/aceituna.webp'   },
+  { slug: 'especiales', label: 'Especiales Gourmet', sublabel: 'Con base de aceite de oliva',     bg: 'from-[#4a2800] to-[#8b5e3c]',  image: '/imagenes/especiales.webp' },
 ]
 
 const STRIP_ITEMS = [
@@ -61,7 +61,7 @@ export default async function HomePage() {
         style={{ backgroundColor: '#18532c' }}
       >
         <Image
-          src="/imagenes/portada.png"
+          src="/imagenes/portada.webp"
           alt=""
           fill
           sizes="(min-width: 768px) 50vw, 100vw"

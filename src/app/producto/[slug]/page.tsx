@@ -9,6 +9,24 @@ import { formatPrice }        from '@/lib/utils'
 
 export const revalidate = 60
 
+const SITE_URL = 'https://calixto.ar'
+
+const CATEGORY_LABELS: Record<string, string> = {
+  aceites:    'Aceites de Oliva',
+  varietales: 'Varietales',
+  acetos:     'Acetos',
+  aceitunas:  'Aceitunas',
+  especiales: 'Especiales Gourmet',
+}
+
+// Recorta las fotos de Cloudinary a 1200×630 (tamaño de vista previa de WhatsApp,
+// Facebook, etc.) con fondo blanco, para que el producto se vea completo.
+function toShareImage(url: string): string {
+  const marker = '/image/upload/'
+  if (!url.includes('res.cloudinary.com') || !url.includes(marker)) return url
+  return url.replace(marker, `${marker}c_pad,w_1200,h_630,b_white,f_jpg,q_auto/`)
+}
+
 interface Props {
   params: Promise<{ slug: string }>
 }
@@ -25,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const rawImage = product.images?.[0]
   const imageUrl = rawImage
-    ? (rawImage.startsWith('http') ? rawImage : `https://calixto.ar${rawImage}`)
+    ? toShareImage(rawImage.startsWith('http') ? rawImage : `https://calixto.ar${rawImage}`)
     : 'https://calixto.ar/og-default.png'
 
   const description = product.description
@@ -80,21 +98,43 @@ export default async function ProductPage({ params }: Props) {
     description:   product.description,
     image:         product.images ?? [],
     sku:           product.id,
-    category:      product.category,
+    category:      CATEGORY_LABELS[product.category] ?? product.category,
+    brand:         { '@type': 'Brand', name: 'Calixto' },
+    ...(product.volume && { size: product.volume }),
+    ...(product.origin && { countryOfOrigin: product.origin }),
     offers: {
       '@type':         'Offer',
-      url:              `https://calixto.ar/producto/${slug}`,
+      url:              `${SITE_URL}/producto/${slug}`,
       priceCurrency:    'ARS',
       price:            product.price,
+      itemCondition:    'https://schema.org/NewCondition',
       availability:     product.stock > 0
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
+      seller:           { '@type': 'Organization', name: 'Calixto — Sabores de Altura' },
     },
+  }
+
+  // Migas de pan: Google las muestra en el resultado en lugar de la URL
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type':    'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio',    item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Productos', item: `${SITE_URL}/productos` },
+      {
+        '@type': 'ListItem', position: 3,
+        name: CATEGORY_LABELS[product.category] ?? product.category,
+        item: `${SITE_URL}/productos?categoria=${product.category}`,
+      },
+      { '@type': 'ListItem', position: 4, name: product.name },
+    ],
   }
 
   return (
     <div className="min-h-screen bg-ivory">
       <JsonLd data={productJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <div className="max-w-screen-xl mx-auto px-8 md:px-20 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
 
