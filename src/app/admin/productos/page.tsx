@@ -11,6 +11,7 @@ import { normalizeProduct, getProductsPage } from '@/lib/firestore'
 import { formatPrice }                 from '@/lib/utils'
 import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 import toast                           from 'react-hot-toast'
+import { refreshStorefront }       from '@/lib/refreshStorefront'
 import LoadMoreButton                  from '@/components/ui/LoadMoreButton'
 import type { Product }                from '@/types'
 
@@ -92,6 +93,7 @@ export default function AdminProductosPage() {
       setProducts(prev => prev.filter(p => p.id !== id))
       setAllProducts(prev => prev ? prev.filter(p => p.id !== id) : prev)
       toast.success('Producto eliminado')
+      void refreshStorefront()
     } catch {
       toast.error('No se pudo eliminar')
     }

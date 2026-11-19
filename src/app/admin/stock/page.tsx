@@ -9,6 +9,7 @@ import { db }          from '@/lib/firebase'
 import { formatPrice } from '@/lib/utils'
 import { Printer, Search, Plus, Check, X } from 'lucide-react'
 import toast           from 'react-hot-toast'
+import { refreshStorefront } from '@/lib/refreshStorefront'
 import type { Product } from '@/types'
 
 type StockFilter = 'todos' | 'critico' | 'bajo' | 'ok'
@@ -117,6 +118,7 @@ export default function StockPage() {
       }, ...prev])
 
       toast.success(`+${editingQty} unidades agregadas a ${product.name}`)
+      void refreshStorefront()
       cancelEdit()
     } catch {
       toast.error('Error al actualizar el stock')

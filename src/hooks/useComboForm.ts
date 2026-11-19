@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { normalizeCombo } from '@/lib/firestore'
 import { slugify } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { refreshStorefront } from '@/lib/refreshStorefront'
 import type { Product, ComboItem } from '@/types'
 
 interface ComboFormState {
@@ -139,6 +140,7 @@ export function useComboForm(id: string, isNew: boolean) {
         await updateDoc(doc(db, 'combos', id), comboData)
         toast.success('Combo actualizado')
       }
+      await refreshStorefront()
       router.push('/admin/combos')
     } catch {
       toast.error('Error al guardar')

@@ -6,8 +6,9 @@ import Footer             from '@/components/layout/Footer'
 import CartDrawer         from '@/components/cart/CartDrawer'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
 import JsonLd          from '@/components/seo/JsonLd'
+import CookieBanner     from '@/components/layout/CookieBanner'
+import ConsentAnalytics from '@/components/layout/ConsentAnalytics'
 import './globals.css'
-import { GoogleAnalytics } from '@next/third-parties/google'
 
 const organizationJsonLd = {
   '@context': 'https://schema.org',
@@ -16,8 +17,7 @@ const organizationJsonLd = {
   url:        'https://calixto.ar',
   logo:       'https://calixto.ar/logo-principal-verde.svg',
   sameAs: [
-    'https://instagram.com/calixto',
-    'https://facebook.com/calixto',
+    'https://www.instagram.com/calixtodealtura/',
   ],
 }
 
@@ -81,9 +81,10 @@ export default function RootLayout({
             }}
           />
           <Footer />
+          <CookieBanner />
         </AuthProvider>
+        {GA_ID && <ConsentAnalytics gaId={GA_ID} />}
       </body>
-      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   )
 }

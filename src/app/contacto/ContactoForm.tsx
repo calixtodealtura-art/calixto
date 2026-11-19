@@ -17,8 +17,7 @@ const CONTACT_INFO = [
 ]
 
 const SOCIAL = [
-  { label: 'Instagram', href: 'https://instagram.com/calixto' },
-  { label: 'Facebook',  href: 'https://facebook.com/calixto'  },
+  { label: 'Instagram', href: 'https://www.instagram.com/calixtodealtura/' },
 ]
 
 const EMPTY = { name: '', email: '', subject: '', message: '', website: '' }

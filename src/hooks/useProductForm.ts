@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'
 import { normalizeProduct } from '@/lib/firestore'
 import { slugify } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { refreshStorefront } from '@/lib/refreshStorefront'
 import type { Product } from '@/types'
 
 // Igual que Product, pero price/stock/oldPrice pueden valer '' temporalmente
@@ -129,6 +130,7 @@ export function useProductForm(id: string, isNew: boolean) {
         await updateDoc(doc(db, 'products', id), payload)
         toast.success('Producto actualizado')
       }
+      await refreshStorefront()
       router.push('/admin/productos')
     } catch (err) {
       console.error(err)

@@ -1,21 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createHash } from 'crypto'
-import { cookies } from 'next/headers'
-import { getAdminAuth, getAdminDb } from '@/lib/firebaseAdmin'
-
-async function isRequestFromAdmin(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('calixto-admin-token')?.value
-  if (!token) return false
-
-  try {
-    const decoded = await getAdminAuth().verifyIdToken(token)
-    const snap = await getAdminDb().collection('users').doc(decoded.uid).get()
-    return snap.exists && snap.data()?.role === 'admin'
-  } catch {
-    return false
-  }
-}
+import { isRequestFromAdmin } from '@/lib/adminAuth'
 
 // Firma una subida a Cloudinary server-side, para no depender de un
 // upload_preset "unsigned" expuesto en el bundle del cliente.

@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/imperdibles`, changeFrequency: 'daily',  priority: 0.7 },
     { url: `${BASE_URL}/nosotros`,   changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/contacto`,   changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/privacidad`, changeFrequency: 'yearly',  priority: 0.2 },
   ]
 
   const productRoutes: MetadataRoute.Sitemap = products.map(product => ({

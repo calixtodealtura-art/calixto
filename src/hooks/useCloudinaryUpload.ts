@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { auth } from '@/lib/firebase'
+import { setAdminSessionCookie } from '@/lib/auth'
 
 interface UploadSignature {
   signature: string
@@ -20,8 +22,15 @@ export function useCloudinaryUpload() {
     setUploading(true)
     setUploadPct(0)
     try {
+      // El ID token de Firebase dura 1h y la cookie solo se escribe al loguear:
+      // la refrescamos antes de firmar para no recibir 401 con sesiones largas.
+      if (auth.currentUser) await setAdminSessionCookie(auth.currentUser)
+
       const sigRes = await fetch('/api/upload-signature', { method: 'POST' })
-      if (!sigRes.ok) throw new Error('No se pudo firmar la subida')
+      if (!sigRes.ok) {
+        const body = await sigRes.json().catch(() => null)
+        throw new Error(`No se pudo firmar la subida (${sigRes.status}): ${body?.error ?? sigRes.statusText}`)
+      }
       const { signature, timestamp, apiKey, cloudName, folder }: UploadSignature = await sigRes.json()
 
       const formData = new FormData()

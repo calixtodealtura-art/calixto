@@ -11,6 +11,7 @@ import { normalizeCombo } from '@/lib/firestore'
 import { formatPrice }    from '@/lib/utils'
 import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 import toast              from 'react-hot-toast'
+import { refreshStorefront } from '@/lib/refreshStorefront'
 import type { Combo }     from '@/types'
 
 export default function CombosPage() {
@@ -37,6 +38,7 @@ export default function CombosPage() {
       await updateDoc(doc(db, 'combos', id), { active: !current })
       setCombos(prev => prev.map(c => c.id === id ? { ...c, active: !current } : c))
       toast.success(!current ? 'Combo activado' : 'Combo desactivado')
+      void refreshStorefront()
     } catch {
       toast.error('No se pudo actualizar')
     }
@@ -48,6 +50,7 @@ export default function CombosPage() {
       await deleteDoc(doc(db, 'combos', id))
       setCombos(prev => prev.filter(c => c.id !== id))
       toast.success('Combo eliminado')
+      void refreshStorefront()
     } catch {
       toast.error('No se pudo eliminar')
     }

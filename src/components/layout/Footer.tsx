@@ -1,5 +1,7 @@
 import Link          from 'next/link'
+import { Instagram } from 'lucide-react'
 import LogoPrincipal from '@/components/ui/LogoPrincipal'
+import CookieSettingsButton from '@/components/layout/CookieSettingsButton'
 
 const LINKS = {
   'Productos': [
@@ -14,7 +16,8 @@ const LINKS = {
     { label: 'El origen',        href: '/nosotros#origen' }
   ],
   'Ayuda': [
-    { label: 'Contacto',             href: '/contacto'     },
+    { label: 'Contacto',               href: '/contacto'   },
+    { label: 'Política de privacidad', href: '/privacidad' },
   ],
 }
 
@@ -33,6 +36,17 @@ export default function Footer() {
             <p className="text-[12px] text-cream/50 font-light leading-relaxed">
               Productos regionales de Cuyo, con identidad y criterio.
             </p>
+            <a
+              href="https://www.instagram.com/calixtodealtura/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Calixto en Instagram"
+              className="inline-flex items-center gap-2 text-[12px] text-cream/50 font-light
+                         hover:text-orange transition-colors duration-200"
+            >
+              <Instagram size={16} strokeWidth={1.5} />
+              @calixtodealtura
+            </a>
           </div>
 
           {/* Nav columns */}
@@ -69,9 +83,15 @@ export default function Footer() {
           >
             © {new Date().getFullYear()}  Creativit - Páginas web que convierten visitas en clientes. Todos los derechos reservados.
           </a>
-          <p className="text-[11px] text-cream/30 font-light">
-            Pilar, Argentina
-          </p>
+          <div className="flex items-center gap-5">
+            <CookieSettingsButton
+              className="text-[11px] text-cream/30 font-light tracking-wide
+                         hover:text-cream/60 transition-colors duration-200"
+            />
+            <p className="text-[11px] text-cream/30 font-light">
+              Pilar, Argentina
+            </p>
+          </div>
         </div>
       </div>
     </footer>
